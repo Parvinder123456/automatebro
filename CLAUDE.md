@@ -837,3 +837,192 @@ Don't just fix bugs — fix the rules that allowed the bug. Every mistake is a m
 - Use `/context` to check token usage when working on large tasks
 - When testing: queue observations, fix in batch (not one at a time)
 - Research shows 2% misalignment early in a conversation can cause 40% failure rate by end — start fresh when changing direction
+
+---
+
+# Project: AutomateBro — Instagram DM Automation Platform
+
+> **This is a project-specific section. The rules above (Critical Rules, Quality Gates,
+> Git Workflow, StrictDB, Testing, Service Ports, etc.) all still apply. This section
+> adds context and constraints specific to AutomateBro on top of them.**
+
+## What we're building
+
+AutomateBro is a creator-first Instagram DM automation platform — a direct competitor
+to LinkPlease, ManyChat, and LinkDM, positioned for the Indian creator and D2C market.
+Core value prop: flat-rate INR pricing, native AI replies on day one, true unlimited
+accounts on the agency tier, and a conversion-attribution dashboard that competitors
+lack.
+
+Primary persona: Indian creators (50K–5M followers), coaches, D2C brands, affiliate
+marketers, and small agencies managing 1–10 client IG accounts.
+
+## Hard constraints (do not violate, ever)
+
+1. **No browser automation.** Never use Selenium, Puppeteer-against-IG, Playwright-against-IG,
+   or any tool that scrapes Instagram's web UI. We are an API-first product. If a feature
+   cannot be built on Meta's official Instagram Graph API, we do not ship it.
+2. **No password collection.** Users connect via OAuth through Meta's Facebook Login for
+   Business. We never see, store, or transmit Instagram credentials.
+3. **Respect Meta rate limits.** Cap automated DM sends at 185/hour per IG account
+   (7.5% buffer below Meta's ~200/hr practical ceiling). All sends go through a
+   per-account rate-limited queue.
+4. **Respect the 24-hour messaging window.** Outbound DMs are only sent within 24 hours
+   of a user's last interaction with the connected business account, unless using an
+   approved message tag. The codebase must enforce this; do not rely on Meta to reject.
+5. **Webhook signature verification is mandatory.** Every Meta webhook request must pass
+   HMAC-SHA256 signature verification before any handler logic runs. Reject 401 on
+   failure, log the attempt.
+6. **Idempotency on every external write.** Comments, story replies, and DMs may be
+   delivered to our webhook more than once. Every handler keys on Meta's event ID and
+   no-ops on duplicates.
+7. **Multi-tenant from day 1.** Every collection/table that holds tenant data has a
+   `tenantId` field. StrictDB schemas declare this as required and indexed. No
+   exceptions, no "we'll add it later."
+8. **Encryption at rest for tokens.** Long-lived Page Access Tokens are encrypted with
+   AES-256-GCM using a key from the secrets manager before insert. Decrypted only at
+   the moment of an outbound API call.
+
+## Tech stack (locked — fits the cc-mastery starter kit)
+
+- **Frontend:** Next.js 15 (App Router) + TypeScript strict + Tailwind + shadcn/ui
+- **HTTP:** Next.js API routes under `/api/v1/*` (per starter kit Critical Rule #2)
+- **Worker:** Separate Node.js entry point at `src/worker/index.ts`, deployed to Railway
+- **Database:** Supabase Postgres, accessed via **StrictDB** with `STRICTDB_URI=postgresql://...`
+  (per starter kit Critical Rule #3 — native drivers / Mongoose / Drizzle are FORBIDDEN)
+- **Cache + Queue:** Upstash Redis + BullMQ
+- **Auth (our users):** Supabase Auth (email + Google)
+- **Auth (their IG):** Facebook Login for Business via Meta OAuth
+- **Hosting:** Vercel (web/API) + Railway (worker)
+- **Payments:** Razorpay (India, primary) + Stripe (global)
+- **Email:** Resend
+- **Observability:** Sentry (errors) + Axiom (logs) + Better Stack (uptime)
+- **Analytics:** PostHog (product) + Plausible (marketing)
+
+If a feature seems to need a different tool, propose it in chat first. Do not silently
+introduce new dependencies.
+
+## Service mapping to starter kit ports
+
+| Service | Port (dev) | Port (test) | What lives here |
+|---|---|---|---|
+| Website | 3000 | 4000 | Marketing site, /pricing, /compare/* SEO pages |
+| API | 3001 | 4010 | `/api/v1/webhooks/meta`, `/api/v1/automations/*`, all backend routes |
+| Dashboard | 3002 | 4020 | Logged-in tenant dashboard UI |
+| Worker | (no port — process) | n/a | BullMQ consumers for `process-comment`, `send-dm`, `capture-lead` |
+
+Webhook URL exposed by Meta points at the **API service** (3001), NOT website.
+
+## StrictDB schema registration (canonical collection names)
+
+Register these on app startup — `src/db/schema.ts`. Field names use camelCase per starter
+kit rules (`scripts/db-query.ts` and adapter layer).
+
+- `tenants` — one per AutomateBro account (workspace)
+- `users` — humans with login access
+- `tenantUsers` — many-to-many join: user ↔ tenant with role
+- `igAccounts` — connected Instagram Business/Creator accounts; belongs to one tenant
+- `automations` — a triggered flow (comment, story-reply, DM, ads, live)
+- `triggers` — keywords, post selectors, filters bound to an automation
+- `responses` — the DM/comment-reply content sent when triggered
+- `events` — every webhook event we receive (immutable log, **unique index on `metaEventId`**)
+- `sends` — every outbound DM/comment-reply attempt (queued, sent, failed, rate-limited)
+- `leads` — contacts captured inside DM flows (with email/phone if collected)
+- `subscriptions` — Razorpay/Stripe subscription state per tenant
+
+Every collection EXCEPT `tenants` and `users` has a required indexed `tenantId` field.
+
+## Folder layout (within starter kit's `src/`)
+
+We use the starter kit's `src/handlers/`, `src/adapters/`, `src/types/` convention.
+We add three project-specific subdirectories:
+
+```
+src/
+├── handlers/                    # Existing — business logic
+│   ├── webhooks/
+│   │   └── meta.ts              # POST /api/v1/webhooks/meta — verify, dedupe, enqueue
+│   ├── automations/             # CRUD for automation rules
+│   ├── igAccounts/              # OAuth connect, disconnect, refresh
+│   └── leads/                   # Lead listing, export
+├── adapters/                    # Existing — external service wrappers
+│   ├── meta.ts                  # Meta Graph API client (typed, rate-limit aware)
+│   ├── razorpay.ts
+│   ├── stripe.ts
+│   └── resend.ts
+├── types/                       # Existing — shared types
+│   └── meta-webhook.ts          # Zod schemas for every webhook payload shape
+├── worker/                      # NEW — Railway entry point
+│   ├── index.ts                 # Worker bootstrap; graceful shutdown
+│   └── jobs/
+│       ├── processComment.ts
+│       ├── sendDM.ts
+│       └── captureLead.ts
+├── queue/                       # NEW — BullMQ setup
+│   ├── queues.ts                # Queue definitions, connection, rate limiter
+│   └── jobTypes.ts              # Discriminated unions for every job payload
+└── meta/                        # NEW — Meta-specific helpers (not generic adapter)
+    ├── verifySignature.ts       # HMAC-SHA256 webhook verification
+    ├── oauth.ts                 # Token exchange, encryption, refresh
+    └── rateLimiter.ts           # Per-IG-account 185/hr semaphore in Redis
+
+scripts/
+└── queries/                     # cc-mastery db-query system (per Critical Rule #3)
+    ├── find-pending-sends.ts
+    ├── find-stuck-automations.ts
+    └── tenant-events-summary.ts
+```
+
+## Critical flows (how the product actually works)
+
+**Flow 1 — User connects IG account:**
+User logs in to AutomateBro → clicks "Connect Instagram" → redirected to Facebook OAuth
+→ grants permissions → we receive a code at `/api/v1/auth/meta/callback` → exchange for
+short-lived token → exchange for long-lived Page Access Token → encrypt with AES-256-GCM
+→ `db.insertOne('igAccounts', { ...encrypted })` → subscribe to webhook fields
+(`comments`, `messages`, `message_reactions`, `mentions`) → confirm with a UI ping.
+
+**Flow 2 — Comment-to-DM:**
+Meta fires webhook on comment → `POST /api/v1/webhooks/meta` (port 3001) →
+`verifyMetaSignature()` checks HMAC, rejects 401 on fail → `db.insertOne('events', { metaEventId, ... })`
+with unique index causing dedupe → enqueue `process-comment` job → worker matches comment
+text against tenant's active keyword triggers → if match, enqueue `send-dm` job →
+rate limiter checks per-account 185/hr cap in Redis → if under cap, call Meta `/me/messages`
+with the recipient's PSID → `db.insertOne('sends', ...)` → on failure, exponential backoff
+up to 3 retries.
+
+**Flow 3 — Lead capture inside DM:**
+DM auto-reply asks for email → user replies with email → webhook fires on incoming message
+→ if active capture flow, parse email with regex → `db.updateOne('leads', { tenantId, igUserId }, { $set: { email } }, true)` (upsert)
+→ push to integrations (Mailchimp, Google Sheets, Razorpay customer).
+
+## What we are NOT building (explicit non-goals for v1)
+
+- Bulk follow/unfollow (TOS-violating, off-limits forever)
+- Schedule-to-publish posts (different product entirely)
+- Hashtag scraping or competitor analysis tools
+- AI image generation
+- Multi-platform messaging (WhatsApp, Messenger, TikTok come post-launch, not v1)
+- Anything requiring access to followers list (Meta does not expose this)
+
+## Project-specific behavior overrides for Claude
+
+These augment — but never contradict — the rules in the cc-mastery section above:
+
+1. **Always read `docs/engineering-plan.md` and the relevant `docs/specs/NNN-*.md` before
+   writing code.** If they're not in your context, view them first.
+2. **Follow the MDD loop strictly:** Analyze → Document (spec) → Approve → Test (failing
+   tests first) → Approve → Code → Review subagent → Approve → Commit. Never skip Document
+   or Test.
+3. **Stop at gates.** When a phase says "STOP and wait for my approval," stop. Do not
+   continue into the next phase.
+4. **No invented Meta data.** Webhook payloads, PSIDs, page IDs, app secrets — never
+   fabricate examples that look real (`PAGE_ID=12345`). Use clearly-fake placeholders
+   like `<your-page-id>` or ask.
+5. **No silent dependencies.** If you need a new package (especially anything that touches
+   IG, OAuth, queues, or webhooks), propose it with one sentence on why and what you
+   considered instead.
+
+## Lessons learned (append-only; commit each addition)
+
+<!-- Format: YYYY-MM-DD — one-sentence rule. -->
