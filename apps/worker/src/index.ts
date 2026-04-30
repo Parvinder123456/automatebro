@@ -48,8 +48,11 @@ async function shutdown(code: number, reason: string): Promise<void> {
   await closeDb().catch((err: unknown) => logger.warn({ err }, 'closeDb error'));
 
   logger.info('worker shutdown complete');
-  // Give Pino a tick to flush before exit.
-  setTimeout(() => process.exit(code), 50);
+  // Pino's default destination (process.stdout) is a synchronous file
+  // descriptor on Linux/macOS, so the line above is on disk before we
+  // exit. If a future spec adds an async transport (Axiom, file), wrap
+  // a `pino.final()` flush around shutdown — see Pino docs.
+  process.exit(code);
 }
 
 function registerSignalHandlers(): void {

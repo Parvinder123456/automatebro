@@ -12,16 +12,27 @@
  * That means tests with no REDIS_URL still load the module cleanly;
  * the connection only opens on the first command (e.g. ping(), add(),
  * etc.).
+ *
+ * Env handling: REDIS_URL is required in production (we throw if
+ * missing). In test/dev we fall back to localhost so test files can
+ * import this module even with no .env present — the integration tests
+ * are gated by `describe.skipIf(!process.env.REDIS_URL)` and never
+ * actually hit the localhost fallback.
  */
 import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
 
-/**
- * Lazy module-load: read REDIS_URL with a fallback so a malformed
- * env doesn't fail at import time. Tests that genuinely need Redis
- * gate themselves on `process.env.REDIS_URL` via describe.skipIf.
- */
-const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
+function resolveRedisUrl(): string {
+  const fromEnv = process.env.REDIS_URL;
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('REDIS_URL is required in production but is not set');
+  }
+  // Test / dev fallback. NEVER reached with skipIf-gated integration tests.
+  return 'redis://localhost:6379';
+}
+
+const redisUrl = resolveRedisUrl();
 
 /** Shared ioredis connection used by the Queue and the Worker. */
 export const connection: Redis = new Redis(redisUrl, {

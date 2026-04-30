@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@automatebro/shared": "workspace:*",
+    "ioredis": "^5.4.1",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

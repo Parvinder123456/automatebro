@@ -13,7 +13,8 @@
  * SIGTERM handlers.
  */
 import { StrictDB } from 'strictdb';
-import { Env } from '../env.js';
+import { loadEnv } from '../env.js';
+import { logger } from '../logger.js';
 
 /**
  * Subset of the StrictDB shutdown surface we care about. We do NOT
@@ -34,7 +35,7 @@ let dbPromise: Promise<StrictDB> | null = null;
  */
 export function getDb(): Promise<StrictDB> {
   if (dbPromise === null) {
-    const env = Env.parse(process.env);
+    const env = loadEnv();
     dbPromise = StrictDB.create({ uri: env.STRICTDB_URI });
   }
   return dbPromise;
@@ -56,6 +57,10 @@ export async function closeDb(): Promise<void> {
       await closable.close();
     } else if (typeof closable.disconnect === 'function') {
       await closable.disconnect();
+    } else {
+      logger.warn(
+        'closeDb: StrictDB instance exposes no close()/disconnect() method — connection may leak',
+      );
     }
   } catch {
     // Best-effort. Underlying connection state is unrecoverable here.

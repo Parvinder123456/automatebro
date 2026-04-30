@@ -6,12 +6,20 @@
  * Shallow checks in spec 001:
  *  - DB: getDb() resolved without throwing (no real query because no
  *    schemas are registered yet — spec 003 upgrades this).
- *  - Redis: connection.ping() returned PONG within ~2s.
+ *  - Redis: an ephemeral ioredis connection ping() returned PONG.
+ *
+ * Why an ephemeral Redis connection (NOT the shared queue connection):
+ * Vercel serverless cold-starts allocate a new Lambda per instance,
+ * and the shared `connection` from queues.ts would leak one TCP
+ * connection per Lambda with no teardown hook. Health checks fire
+ * frequently (uptime monitors); leaking is unacceptable. We open a
+ * connection, ping, and quit() — Redis connection count stays bounded.
  *
  * Both checks run in parallel per CLAUDE.md Rule #8.
  */
 import { getDb } from '@automatebro/shared/db/client';
-import { connection } from '@automatebro/shared/queue/queues';
+import { loadEnv } from '@automatebro/shared/env';
+import { Redis } from 'ioredis';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,10 +59,21 @@ async function checkDb(): Promise<DbCheck> {
 }
 
 async function checkRedis(): Promise<RedisCheck> {
+  let url: string;
+  try {
+    url = loadEnv().REDIS_URL;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+  const redis = new Redis(url, {
+    maxRetriesPerRequest: 1,
+    connectTimeout: REDIS_TIMEOUT_MS,
+    lazyConnect: true,
+  });
   const start = Date.now();
   try {
     const pong = await Promise.race([
-      connection.ping(),
+      redis.ping(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('redis ping timeout')), REDIS_TIMEOUT_MS),
       ),
@@ -65,6 +84,9 @@ async function checkRedis(): Promise<RedisCheck> {
     return { ok: true, latencyMs: Date.now() - start };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  } finally {
+    // Best-effort cleanup so Lambda doesn't leak a TCP socket.
+    redis.disconnect();
   }
 }
 

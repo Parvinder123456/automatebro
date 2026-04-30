@@ -27,7 +27,9 @@ export interface CreateLoggerOptions {
 /**
  * Field paths Pino will replace with `[Redacted]` before serialization.
  * Conservative list — favours false positives (over-redaction) over
- * leaking a secret.
+ * leaking a secret. Includes both camelCase forms used in app code AND
+ * the SCREAMING_SNAKE_CASE env-var names (in case a caught error logs
+ * a config object that includes them).
  */
 const REDACT_PATHS = [
   // Connection strings (any nesting up to 2 deep)
@@ -37,9 +39,30 @@ const REDACT_PATHS = [
   'redisUrl',
   '*.redisUrl',
   '*.*.redisUrl',
+  // Env-var names (covers `logger.error({ err, ...env })` accidents)
   'STRICTDB_URI',
+  '*.STRICTDB_URI',
   'REDIS_URL',
-  // Common secret field names
+  '*.REDIS_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  '*.SUPABASE_SERVICE_ROLE_KEY',
+  'SUPABASE_ANON_KEY',
+  '*.SUPABASE_ANON_KEY',
+  'OPENAI_API_KEY',
+  '*.OPENAI_API_KEY',
+  'META_APP_SECRET',
+  '*.META_APP_SECRET',
+  'WEBHOOK_VERIFY_TOKEN',
+  '*.WEBHOOK_VERIFY_TOKEN',
+  'RAZORPAY_KEY_ID',
+  '*.RAZORPAY_KEY_ID',
+  'RAZORPAY_KEY_SECRET',
+  '*.RAZORPAY_KEY_SECRET',
+  'STRIPE_SECRET_KEY',
+  '*.STRIPE_SECRET_KEY',
+  'RESEND_API_KEY',
+  '*.RESEND_API_KEY',
+  // Common secret field names (camelCase / lowercase)
   'password',
   '*.password',
   '*.*.password',
@@ -55,13 +78,32 @@ const REDACT_PATHS = [
   '*.accessToken',
   'accessTokenCiphertext',
   '*.accessTokenCiphertext',
-  // Razorpay (anticipating spec 010)
+  'pageAccessToken',
+  '*.pageAccessToken',
+  // Razorpay / Stripe (anticipating spec 010)
   'razorpaySecret',
   '*.razorpaySecret',
+  'stripeSecret',
+  '*.stripeSecret',
 ];
 
+const VALID_LEVELS = new Set<LogLevel>(['debug', 'info', 'warn', 'error']);
+
+function levelFromEnv(): LogLevel | undefined {
+  // Read process.env directly here (not via loadEnv) because the logger
+  // is initialised at module load before loadEnv() is safe to call —
+  // loadEnv would throw on missing STRICTDB_URI. We accept the cost of
+  // a string compare; an invalid LOG_LEVEL silently falls back to 'info'
+  // rather than crashing the boot.
+  const raw = process.env.LOG_LEVEL;
+  if (raw && VALID_LEVELS.has(raw as LogLevel)) {
+    return raw as LogLevel;
+  }
+  return undefined;
+}
+
 export function createLogger(options: CreateLoggerOptions = {}): PinoLogger {
-  const level = options.level ?? (process.env.LOG_LEVEL as LogLevel | undefined) ?? 'info';
+  const level = options.level ?? levelFromEnv() ?? 'info';
   const baseOptions = {
     level,
     redact: {

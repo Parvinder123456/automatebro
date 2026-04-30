@@ -13,10 +13,17 @@ describe('packages/shared/src/env.ts', () => {
 
   beforeEach(() => {
     // Reset only the vars we manage so unrelated env stays intact.
-    process.env.NODE_ENV = undefined;
-    process.env.LOG_LEVEL = undefined;
-    process.env.STRICTDB_URI = undefined;
-    process.env.REDIS_URL = undefined;
+    // `delete` is required here — `process.env.X = undefined` sets
+    // the literal string "undefined" in Node.js. Biome flags `delete`
+    // for perf, but it's the correct primitive for env unsetting.
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.NODE_ENV;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.LOG_LEVEL;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.STRICTDB_URI;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.REDIS_URL;
   });
 
   afterEach(() => {

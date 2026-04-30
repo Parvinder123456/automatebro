@@ -14,7 +14,9 @@
       "playwright-report",
       "**/.next",
       "**/.turbo",
-      "pnpm-lock.yaml"
+      "pnpm-lock.yaml",
+      ".claude/**",
+      "project-docs/**"
     ]
   },
   "formatter": {
