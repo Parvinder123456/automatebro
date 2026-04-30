@@ -1,0 +1,21 @@
+{
+  "name": "@automatebro/worker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node --enable-source-maps dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@automatebro/shared": "workspace:*",
+    "bullmq": "^5.21.0",
+    "ioredis": "^5.4.1",
+    "pino": "^9.4.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
