@@ -13,10 +13,10 @@ describe('packages/shared/src/env.ts', () => {
 
   beforeEach(() => {
     // Reset only the vars we manage so unrelated env stays intact.
-    delete process.env.NODE_ENV;
-    delete process.env.LOG_LEVEL;
-    delete process.env.STRICTDB_URI;
-    delete process.env.REDIS_URL;
+    process.env.NODE_ENV = undefined;
+    process.env.LOG_LEVEL = undefined;
+    process.env.STRICTDB_URI = undefined;
+    process.env.REDIS_URL = undefined;
   });
 
   afterEach(() => {
@@ -28,9 +28,9 @@ describe('packages/shared/src/env.ts', () => {
   });
 
   it('U1b: throws when REDIS_URL is missing', () => {
-    expect(() =>
-      Env.parse({ STRICTDB_URI: 'postgresql://u:p@host:5432/db' }),
-    ).toThrowError(/REDIS_URL/);
+    expect(() => Env.parse({ STRICTDB_URI: 'postgresql://u:p@host:5432/db' })).toThrowError(
+      /REDIS_URL/,
+    );
   });
 
   it('U2: defaults NODE_ENV to "development" and LOG_LEVEL to "info"', () => {

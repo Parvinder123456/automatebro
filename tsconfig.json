@@ -1,9 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
   "files": [],
-  "references": [
-    { "path": "./packages/shared" },
-    { "path": "./apps/web" },
-    { "path": "./apps/worker" }
-  ]
+  "include": []
 }

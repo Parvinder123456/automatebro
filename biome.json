@@ -65,6 +65,16 @@
           }
         }
       }
+    },
+    {
+      "include": ["scripts/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsoleLog": "off"
+          }
+        }
+      }
     }
   ]
 }

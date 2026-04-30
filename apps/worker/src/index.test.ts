@@ -16,7 +16,7 @@
  */
 import { type ChildProcess, spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
-import IORedis from 'ioredis';
+import { Redis } from 'ioredis';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const hasInfra = Boolean(process.env.STRICTDB_URI && process.env.REDIS_URL);
@@ -90,7 +90,7 @@ describe.skipIf(!hasInfra)('apps/worker/src/index.ts — bootstrap (integration)
   }, 15_000);
 
   it('W3: writes worker:heartbeat key to Redis', async () => {
-    const redis = new IORedis(process.env.REDIS_URL ?? '', { maxRetriesPerRequest: 1 });
+    const redis = new Redis(process.env.REDIS_URL ?? '', { maxRetriesPerRequest: 1 });
     try {
       active = spawnWorker({ ...process.env });
       const ready = await active.waitForOutput((s) => s.includes('worker ready'), 15_000);
