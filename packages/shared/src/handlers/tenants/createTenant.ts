@@ -65,11 +65,14 @@ export async function createTenant(
   };
 
   // users row should already exist (getCtx mirrored it). We insert
-  // tenants + tenantUsers as a batch.
-  await db.batch([
-    { operation: 'insertOne', collection: 'tenants', doc: tenant },
-    { operation: 'insertOne', collection: 'tenantUsers', doc: membership },
-  ]);
+  // tenants + tenantUsers atomically. db.withTransaction wraps both
+  // calls in a Postgres BEGIN/COMMIT — if either fails, neither
+  // persists. db.batch does NOT do this (sequential, not transactional)
+  // so we use withTransaction for true atomicity.
+  await db.withTransaction(async (tx) => {
+    await tx.insertOne('tenants', tenant as never);
+    await tx.insertOne('tenantUsers', membership as never);
+  });
 
   return { tenant, membership };
 }

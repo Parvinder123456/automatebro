@@ -78,11 +78,23 @@ export const repo = {
     upsert = false,
   ): Promise<unknown> {
     requireTenant(ctx);
+    // Defence-in-depth: prevent a caller from rewriting tenantId on an
+    // existing row. We strip tenantId from any $set / $setOnInsert
+    // payload (the filter scoping above already prevents reading other
+    // tenants; this stops the symmetric write attack).
+    const sanitised: Update = { ...update };
+    for (const op of ['$set', '$setOnInsert']) {
+      const inner = sanitised[op];
+      if (inner !== undefined && inner !== null && typeof inner === 'object') {
+        const { tenantId: _strip, ...rest } = inner as Record<string, unknown>;
+        sanitised[op] = rest;
+      }
+    }
     const db = await getDb();
     return db.updateOne(
       collection,
       withTenant(filter, ctx) as LooseFilter as never,
-      update as never,
+      sanitised as never,
       upsert,
     );
   },

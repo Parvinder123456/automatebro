@@ -1,0 +1,13 @@
+# Force LF line endings for SQL migration files so the migration runner's
+# checksum is stable across Windows / macOS / Linux. Spec 003 §11 + code-
+# review finding #9.
+scripts/migrations/*.sql text eol=lf
+
+# Keep shell scripts and dotfiles deterministic across platforms too.
+*.sh text eol=lf
+*.mjs text eol=lf
+.gitignore text eol=lf
+.dockerignore text eol=lf
+
+# Default text-detection (Git infers binary vs text per the rest).
+* text=auto

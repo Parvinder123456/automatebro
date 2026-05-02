@@ -7,8 +7,13 @@
  *      same user returns 409.
  *
  * These exercise the full HTTP path including middleware + ctx + repo.
+ *
+ * EXCEPTION to "no native pg" rule: see onboarding.spec.ts header.
+ * Cleanup runs out-of-process from the dev server, so getDb() isn't
+ * available here.
  */
 import { expect, test } from '@playwright/test';
+// biome-ignore lint/style/useImportType: Client is used as a value
 import { Client } from 'pg';
 import { type TestUser, createTestUser, deleteTestUser } from './_fixtures/auth.js';
 
@@ -19,7 +24,7 @@ const skipReason = process.env.SUPABASE_SERVICE_ROLE_KEY
 async function deleteTenantByOwner(userId: string): Promise<void> {
   const conn = process.env.STRICTDB_URI;
   if (!conn) return;
-  const c = new Client({ connectionString: conn });
+  const c = new Client({ connectionString: conn, connectionTimeoutMillis: 5_000 });
   try {
     await c.connect();
     await c.query(

@@ -21,7 +21,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   const headerList = await headers();
-  const pathname = headerList.get('x-pathname') ?? '';
+  const pathname = headerList.get('x-pathname');
+  // Middleware sets this header on every request that reaches a layout.
+  // If it's missing, middleware was bypassed somehow (misconfiguration,
+  // direct invocation in tests, etc.). Fail safe: redirect to /login
+  // rather than guess the routing decision.
+  if (pathname === null) {
+    redirect('/login');
+  }
+
   const onOnboarding = pathname === '/onboarding';
   const hasTenant = ctx.tenantId !== null;
 

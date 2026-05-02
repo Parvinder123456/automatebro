@@ -31,8 +31,15 @@ interface AppliedRow {
   applied_at: Date;
 }
 
+/**
+ * Compute checksum on line-ending-normalised content so the same
+ * migration file on Windows (CRLF) and macOS/Linux (LF) hashes
+ * identically. Without this, a developer with autocrlf=true would
+ * see "content has changed" errors on fresh checkouts.
+ */
 function sha256(content: string): string {
-  return createHash('sha256').update(content).digest('hex');
+  const normalised = content.replace(/\r\n/g, '\n');
+  return createHash('sha256').update(normalised).digest('hex');
 }
 
 function listFiles(): string[] {

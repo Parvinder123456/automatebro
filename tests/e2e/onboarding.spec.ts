@@ -9,7 +9,14 @@ import { expect, test } from '@playwright/test';
  *
  * Each test creates a fresh Supabase Auth user via admin API and cleans
  * up + cascades through the database.
+ *
+ * EXCEPTION to "no native pg" rule: this E2E file imports `pg` directly
+ * for cleanup because Playwright runs in a separate process from the
+ * dev server, so `getDb()` (the StrictDB singleton) is not available
+ * here. The other documented exception is `scripts/db-migrate.ts`. Both
+ * are confined to scripts/tests; no app code imports pg directly.
  */
+// biome-ignore lint/style/useImportType: Client is used as a value (new Client(...))
 import { Client } from 'pg';
 import { type TestUser, createTestUser, deleteTestUser } from './_fixtures/auth.js';
 
@@ -20,7 +27,7 @@ const skipReason = process.env.SUPABASE_SERVICE_ROLE_KEY
 async function deleteTenantByOwner(userId: string): Promise<void> {
   const conn = process.env.STRICTDB_URI;
   if (!conn) return;
-  const c = new Client({ connectionString: conn });
+  const c = new Client({ connectionString: conn, connectionTimeoutMillis: 5_000 });
   try {
     await c.connect();
     // FK cascade from tenants → tenantUsers; we still need to clean the

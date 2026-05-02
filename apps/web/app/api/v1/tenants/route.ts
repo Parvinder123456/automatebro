@@ -62,6 +62,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'unknown';
+    // Concurrent POST race: hasExistingTenant() can pass for both
+    // requests, but migration 002's UNIQUE(userId) on tenantUsers makes
+    // the second insert fail with a Postgres unique violation
+    // (SQLSTATE 23505 or message "duplicate key"). Surface as 409 so
+    // the client sees the same error path as the explicit one-shot check.
+    if (
+      err instanceof Error &&
+      (err.message.includes('23505') ||
+        err.message.toLowerCase().includes('duplicate key') ||
+        err.message.toLowerCase().includes('unique'))
+    ) {
+      return NextResponse.json(
+        { error: 'tenant_exists', message: 'You already have a workspace.' },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { error: 'create_failed', message: `Could not create workspace: ${message}` },
       { status: 500 },
