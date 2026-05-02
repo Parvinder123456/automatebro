@@ -39,6 +39,18 @@ export const TenantUserSchema = z.object({
   acceptedAt: z.date(),
 });
 
+export const EventSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid().nullable(),
+  metaEventId: z.string().min(1),
+  kind: z.enum(['comment', 'message', 'storyReply', 'messageReaction', 'mention']),
+  igAccountId: z.string().uuid().nullable(),
+  payload: z.unknown(),
+  signatureVerified: z.boolean(),
+  receivedAt: z.date(),
+  processedAt: z.date().nullable().optional(),
+});
+
 export const IgAccountSchema = z.object({
   _id: z.string().uuid(),
   tenantId: z.string().uuid(),
@@ -87,6 +99,14 @@ export function registerSchemas(db: StrictDB): void {
       { collection: 'igAccounts', fields: { tenantId: 1, igUserId: 1 }, unique: true },
       { collection: 'igAccounts', fields: { tenantId: 1 } },
       { collection: 'igAccounts', fields: { igUserId: 1 } },
+    ],
+  });
+  db.registerCollection({
+    name: 'events',
+    schema: EventSchema,
+    indexes: [
+      { collection: 'events', fields: { metaEventId: 1 }, unique: true },
+      { collection: 'events', fields: { tenantId: 1, kind: 1, receivedAt: -1 } },
     ],
   });
 }

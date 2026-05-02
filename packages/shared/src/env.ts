@@ -45,6 +45,9 @@ export const Env = z
         message:
           'META_TOKEN_KEY must be base64-encoded 32 random bytes (use openssl rand -base64 32)',
       }),
+    // Webhook verify token — must match what's set in Meta dashboard
+    // when registering the webhook callback URL.
+    META_WEBHOOK_VERIFY_TOKEN: z.string().min(16),
     NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   })
   // Defence-in-depth: a misconfigured deploy could point browser and server

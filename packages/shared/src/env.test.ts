@@ -23,6 +23,8 @@ const VALID_INFRA = {
   META_APP_ID: '1234567890',
   META_APP_SECRET: 'cccccccccccccccc1111111111111111',
   META_TOKEN_KEY: Buffer.alloc(32, 1).toString('base64'),
+  // Spec 005 addition: webhook verify token (≥16 chars).
+  META_WEBHOOK_VERIFY_TOKEN: '0123456789abcdef0123456789abcdef',
 } as const;
 
 describe('packages/shared/src/env.ts', () => {
@@ -55,6 +57,8 @@ describe('packages/shared/src/env.ts', () => {
     delete process.env.META_APP_SECRET;
     // biome-ignore lint/performance/noDelete: env-var unset semantics
     delete process.env.META_TOKEN_KEY;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.META_WEBHOOK_VERIFY_TOKEN;
     // biome-ignore lint/performance/noDelete: env-var unset semantics
     delete process.env.NEXT_PUBLIC_SITE_URL;
   });
