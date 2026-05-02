@@ -7,9 +7,11 @@
  *
  * Returns counts so the route can include them in the 200 response.
  */
+import { randomUUID } from 'node:crypto';
 import { getDb } from '../../db/client.js';
 import { logger } from '../../logger.js';
 import { type ParsedEvent, parseWebhookEvents } from '../../meta/eventId.js';
+import { eventsQueue } from '../../queue/queues.js';
 
 export interface IngestResult {
   parsed: number;
@@ -65,8 +67,10 @@ export async function ingestMetaWebhook(payload: unknown): Promise<IngestResult>
 
   for (const event of parsed) {
     const resolved = await resolveTenant(event);
+    const eventId = randomUUID();
     try {
       await db.insertOne('events', {
+        _id: eventId,
         tenantId: resolved.tenantId,
         metaEventId: resolved.metaEventId,
         kind: resolved.kind,
@@ -78,10 +82,24 @@ export async function ingestMetaWebhook(payload: unknown): Promise<IngestResult>
       } as never);
       result.inserted += 1;
       result.events.push({
-        _id: resolved.metaEventId,
+        _id: eventId,
         kind: resolved.kind,
         metaEventId: resolved.metaEventId,
       });
+
+      // Spec 006 — enqueue a process-event job. Per-igAccount rate
+      // limiting is BullMQ Pro's `groupKey`; in OSS we apply rate
+      // limiting inside the sendDM handler via a Redis sliding-window
+      // sorted set (lands in spec 007). For now, jobs use BullMQ's
+      // global limiter only.
+      try {
+        await eventsQueue.add('process-event', { type: 'process-event', eventId });
+      } catch (err) {
+        logger.error(
+          { err: err instanceof Error ? err.message : String(err), eventId },
+          'ingestMetaWebhook: queue.add failed — event persisted but not queued',
+        );
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       // Postgres unique-violation = duplicate delivery. No-op.

@@ -9,7 +9,22 @@
     "./env": "./src/env.ts",
     "./logger": "./src/logger.ts",
     "./db/client": "./src/db/client.ts",
-    "./queue/queues": "./src/queue/queues.ts"
+    "./db/repo": "./src/db/repo.ts",
+    "./db/schema": "./src/db/schema.ts",
+    "./queue/queues": "./src/queue/queues.ts",
+    "./queue/jobTypes": "./src/queue/jobTypes.ts",
+    "./types/tenant": "./src/types/tenant.ts",
+    "./auth/ctx": "./src/auth/ctx.ts",
+    "./adapters/meta": "./src/adapters/meta.ts",
+    "./meta/state": "./src/meta/state.ts",
+    "./meta/tokenCrypto": "./src/meta/tokenCrypto.ts",
+    "./meta/eventId": "./src/meta/eventId.ts",
+    "./meta/verifySignature": "./src/meta/verifySignature.ts",
+    "./handlers/tenants/createTenant": "./src/handlers/tenants/createTenant.ts",
+    "./handlers/igAccounts/connectIgAccount": "./src/handlers/igAccounts/connectIgAccount.ts",
+    "./handlers/igAccounts/listIgAccounts": "./src/handlers/igAccounts/listIgAccounts.ts",
+    "./handlers/igAccounts/disconnectIgAccount": "./src/handlers/igAccounts/disconnectIgAccount.ts",
+    "./handlers/webhooks/ingestMetaWebhook": "./src/handlers/webhooks/ingestMetaWebhook.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

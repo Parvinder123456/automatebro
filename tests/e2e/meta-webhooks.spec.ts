@@ -66,7 +66,8 @@ test.describe('Meta webhook endpoint', () => {
     const response = await request.post('/api/v1/webhooks/meta', {
       headers: {
         'content-type': 'application/json',
-        'x-hub-signature-256': 'sha256=0000000000000000000000000000000000000000000000000000000000000000',
+        'x-hub-signature-256':
+          'sha256=0000000000000000000000000000000000000000000000000000000000000000',
       },
       data: body,
     });
@@ -80,9 +81,7 @@ test.describe('Meta webhook endpoint', () => {
         {
           id: `ig-test-${Date.now()}`,
           time: Date.now(),
-          changes: [
-            { field: 'comments', value: { id: `c-${Date.now()}`, text: 'great post' } },
-          ],
+          changes: [{ field: 'comments', value: { id: `c-${Date.now()}`, text: 'great post' } }],
         },
       ],
     });
