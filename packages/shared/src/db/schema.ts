@@ -51,6 +51,58 @@ export const EventSchema = z.object({
   processedAt: z.date().nullable().optional(),
 });
 
+export const AutomationSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  igAccountId: z.string().uuid(),
+  name: z.string().min(1).max(120),
+  trigger: z.enum(['comment', 'storyReply', 'mention']),
+  status: z.enum(['active', 'paused', 'archived']),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const TriggerSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  automationId: z.string().uuid(),
+  keywords: z.array(z.string().min(1)).min(1),
+  matchMode: z.enum(['contains', 'exact', 'startsWith']),
+  postIds: z.array(z.string()).nullable().optional(),
+});
+
+export const ResponseSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  automationId: z.string().uuid(),
+  mode: z.enum(['static', 'ai']),
+  template: z.string().nullable().optional(),
+  aiPrompt: z.string().nullable().optional(),
+  aiTone: z.enum(['friendly', 'professional', 'playful']).nullable().optional(),
+  fallbackTemplate: z.string().nullable().optional(),
+  commentReply: z.string().nullable().optional(),
+});
+
+export const SendSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  igAccountId: z.string().uuid(),
+  automationId: z.string().uuid().nullable().optional(),
+  eventId: z.string().uuid().nullable().optional(),
+  recipientPsid: z.string().min(1),
+  kind: z.enum(['dm', 'commentReply']),
+  content: z.string(),
+  aiGenerated: z.boolean(),
+  status: z.enum(['queued', 'sent', 'failed', 'rateLimited', 'outsideWindow']),
+  metaMessageId: z.string().nullable().optional(),
+  errorCode: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  attempt: z.number().int().positive(),
+  queuedAt: z.date(),
+  sentAt: z.date().nullable().optional(),
+  failedAt: z.date().nullable().optional(),
+});
+
 export const IgAccountSchema = z.object({
   _id: z.string().uuid(),
   tenantId: z.string().uuid(),
@@ -107,6 +159,29 @@ export function registerSchemas(db: StrictDB): void {
     indexes: [
       { collection: 'events', fields: { metaEventId: 1 }, unique: true },
       { collection: 'events', fields: { tenantId: 1, kind: 1, receivedAt: -1 } },
+    ],
+  });
+  db.registerCollection({
+    name: 'automations',
+    schema: AutomationSchema,
+    indexes: [{ collection: 'automations', fields: { tenantId: 1, status: 1 } }],
+  });
+  db.registerCollection({
+    name: 'triggers',
+    schema: TriggerSchema,
+    indexes: [{ collection: 'triggers', fields: { automationId: 1 } }],
+  });
+  db.registerCollection({
+    name: 'responses',
+    schema: ResponseSchema,
+    indexes: [{ collection: 'responses', fields: { automationId: 1 } }],
+  });
+  db.registerCollection({
+    name: 'sends',
+    schema: SendSchema,
+    indexes: [
+      { collection: 'sends', fields: { tenantId: 1, status: 1 } },
+      { collection: 'sends', fields: { igAccountId: 1, sentAt: -1 } },
     ],
   });
 }

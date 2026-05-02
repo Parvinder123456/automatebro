@@ -1,17 +1,15 @@
 import { getDb } from '@automatebro/shared/db/client';
+import { processCommentEvent } from '@automatebro/shared/handlers/processCommentEvent';
 import { logger } from '@automatebro/shared/logger';
 import type { ProcessEventJobType } from '@automatebro/shared/queue/jobTypes';
 import type { EventRecord } from '@automatebro/shared/types/tenant';
 /**
  * Spec 006 — process a webhook event.
- *
- * For now this just looks up the event row, marks it processed, and
- * logs what kind it was. Spec 007+ will branch on event.kind to:
- *   - 'comment' → match keyword triggers, enqueue send-dm
- *   - 'message' → maybe enqueue capture-lead (regex parse for email)
- *   - 'storyReply' → match story-reply triggers, enqueue send-dm
- *   - 'messageReaction' → no-op for v1
- *   - 'mention' → no-op for v1
+ * Spec 007 — branches on event.kind:
+ *   - 'comment' → processCommentEvent (keyword match + enqueue send-dm)
+ *   - 'message' → spec 009 will enqueue capture-lead
+ *   - 'storyReply' → spec 011 (story-reply automations are post-launch)
+ *   - 'messageReaction' / 'mention' → no-op for v1
  */
 import type { Job } from 'bullmq';
 
@@ -35,17 +33,25 @@ export async function processEvent(data: ProcessEventJobType, job: Job): Promise
     return;
   }
 
-  // Stub for spec 007+: branch on kind. v1 just logs + marks processed.
-  logger.info(
-    {
-      jobId: job.id,
-      eventId: event._id,
-      kind: event.kind,
-      tenantId: event.tenantId,
-      igAccountId: event.igAccountId,
-    },
-    `processEvent: would handle ${event.kind} (real logic in spec 007+)`,
-  );
+  switch (event.kind) {
+    case 'comment': {
+      const result = await processCommentEvent(event);
+      logger.info(
+        { jobId: job.id, eventId: event._id, ...result },
+        'processCommentEvent: completed',
+      );
+      break;
+    }
+    case 'message':
+    case 'storyReply':
+    case 'messageReaction':
+    case 'mention':
+      logger.info(
+        { jobId: job.id, eventId: event._id, kind: event.kind },
+        `processEvent: ${event.kind} — handler lands in a later spec, marking processed`,
+      );
+      break;
+  }
 
   await db.updateOne(
     'events',
