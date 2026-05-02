@@ -19,7 +19,6 @@ const VALID_INFRA = {
   NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_ANON_KEY: 'eyJanon',
   NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJanon',
-  SUPABASE_SERVICE_ROLE_KEY: 'eyJservice',
 } as const;
 
 describe('packages/shared/src/env.ts', () => {
@@ -46,8 +45,6 @@ describe('packages/shared/src/env.ts', () => {
     delete process.env.SUPABASE_ANON_KEY;
     // biome-ignore lint/performance/noDelete: env-var unset semantics
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    // biome-ignore lint/performance/noDelete: env-var unset semantics
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   });
 
   afterEach(() => {
@@ -104,8 +101,18 @@ describe('packages/shared/src/env.ts', () => {
     expect(() => Env.parse(rest)).toThrowError(/NEXT_PUBLIC_SUPABASE_URL/);
   });
 
-  it('S-U3: throws when SUPABASE_SERVICE_ROLE_KEY is missing', () => {
-    const { SUPABASE_SERVICE_ROLE_KEY: _omit, ...rest } = VALID_INFRA;
-    expect(() => Env.parse(rest)).toThrowError(/SUPABASE_SERVICE_ROLE_KEY/);
+  it('S-U3: SUPABASE_URL must equal NEXT_PUBLIC_SUPABASE_URL', () => {
+    expect(() =>
+      Env.parse({
+        ...VALID_INFRA,
+        NEXT_PUBLIC_SUPABASE_URL: 'https://different.supabase.co',
+      }),
+    ).toThrowError(/identical/);
+  });
+
+  it('S-U4: SUPABASE_ANON_KEY must equal NEXT_PUBLIC_SUPABASE_ANON_KEY', () => {
+    expect(() =>
+      Env.parse({ ...VALID_INFRA, NEXT_PUBLIC_SUPABASE_ANON_KEY: 'different' }),
+    ).toThrowError(/identical/);
   });
 });

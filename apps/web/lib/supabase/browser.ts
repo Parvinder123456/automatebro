@@ -10,13 +10,9 @@
  */
 'use client';
 
+import { PublicEnv } from '@automatebro/shared/env';
 import { createBrowserClient } from '@supabase/ssr';
 
 export function createSupabaseBrowserClient() {
-  return createBrowserClient(
-    // biome-ignore lint/style/noNonNullAssertion: NEXT_PUBLIC_* vars are validated at build time
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    // biome-ignore lint/style/noNonNullAssertion: NEXT_PUBLIC_* vars are validated at build time
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  return createBrowserClient(PublicEnv.SUPABASE_URL, PublicEnv.SUPABASE_ANON_KEY);
 }

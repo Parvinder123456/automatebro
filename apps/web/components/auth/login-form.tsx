@@ -1,24 +1,30 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { safeRedirectPath } from '../../lib/auth/public-paths';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 
 /**
  * Spec 002 §6.2 — email + password login form. On success, redirects
- * to ?returnTo (if set by middleware) or /app.
+ * to ?returnTo (if set by middleware) or /app. The returnTo value is
+ * sanitised against open-redirect attacks via safeRedirectPath.
  */
 export function LoginForm() {
   const params = useSearchParams();
-  const returnTo = params.get('returnTo') ?? '/app';
+  const returnTo = safeRedirectPath(params.get('returnTo'));
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Synchronous guard against double-submit when Enter is pressed mid-flight.
+  const submittingRef = useRef(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setSubmitting(true);
 
@@ -26,6 +32,7 @@ export function LoginForm() {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError !== null) {
+      submittingRef.current = false;
       setSubmitting(false);
       setError(signInError.message);
       return;

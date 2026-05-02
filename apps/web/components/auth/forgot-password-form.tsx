@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 
 /**
@@ -11,9 +11,12 @@ export function ForgotPasswordForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submittingRef = useRef(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setSubmitting(true);
 
@@ -21,6 +24,7 @@ export function ForgotPasswordForm() {
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
+    submittingRef.current = false;
     setSubmitting(false);
 
     if (resetError !== null) {

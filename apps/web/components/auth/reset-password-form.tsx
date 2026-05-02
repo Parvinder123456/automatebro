@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 
 /**
@@ -12,17 +12,21 @@ export function ResetPasswordForm() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submittingRef = useRef(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setSubmitting(true);
 
     const supabase = createSupabaseBrowserClient();
     const { error: updateError } = await supabase.auth.updateUser({ password });
-    setSubmitting(false);
 
     if (updateError !== null) {
+      submittingRef.current = false;
+      setSubmitting(false);
       setError(updateError.message);
       return;
     }

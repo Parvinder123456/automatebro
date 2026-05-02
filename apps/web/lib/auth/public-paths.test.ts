@@ -2,7 +2,7 @@
  * Spec 002 §10.1 — public-paths unit tests (U3–U7).
  */
 import { describe, expect, it } from 'vitest';
-import { isPublicPath, shouldSkipSession } from './public-paths.js';
+import { isPublicPath, safeRedirectPath, shouldSkipSession } from './public-paths.js';
 
 describe('apps/web/lib/auth/public-paths.ts', () => {
   it('U3: isPublicPath("/") returns true', () => {
@@ -57,5 +57,45 @@ describe('apps/web/lib/auth/public-paths.ts', () => {
     expect(shouldSkipSession('/api/v1/auth/callback')).toBe(false);
     expect(shouldSkipSession('/login')).toBe(false);
     expect(shouldSkipSession('/app/dashboard')).toBe(false);
+  });
+
+  describe('safeRedirectPath — open-redirect protection', () => {
+    it('accepts same-origin relative paths', () => {
+      expect(safeRedirectPath('/app')).toBe('/app');
+      expect(safeRedirectPath('/onboarding')).toBe('/onboarding');
+      expect(safeRedirectPath('/')).toBe('/');
+      expect(safeRedirectPath('/app/automations')).toBe('/app/automations');
+    });
+
+    it('rejects absolute external URLs', () => {
+      expect(safeRedirectPath('https://evil.com')).toBe('/app');
+      expect(safeRedirectPath('http://evil.com/path')).toBe('/app');
+    });
+
+    it('rejects protocol-relative URLs', () => {
+      expect(safeRedirectPath('//evil.com')).toBe('/app');
+      expect(safeRedirectPath('//evil.com/path')).toBe('/app');
+    });
+
+    it('rejects backslash-prefixed paths (Windows-style hijack)', () => {
+      expect(safeRedirectPath('/\\evil.com')).toBe('/app');
+    });
+
+    it('rejects null / undefined / empty', () => {
+      expect(safeRedirectPath(null)).toBe('/app');
+      expect(safeRedirectPath(undefined)).toBe('/app');
+      expect(safeRedirectPath('')).toBe('/app');
+    });
+
+    it('honours custom fallback', () => {
+      expect(safeRedirectPath('https://evil.com', '/login')).toBe('/login');
+      expect(safeRedirectPath(null, '/login')).toBe('/login');
+    });
+
+    it('rejects javascript: and data: schemes', () => {
+      // These don't start with /, so they fall through to fallback.
+      expect(safeRedirectPath('javascript:alert(1)')).toBe('/app');
+      expect(safeRedirectPath('data:text/html,<script>')).toBe('/app');
+    });
   });
 });

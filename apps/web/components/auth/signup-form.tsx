@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 
 /**
@@ -18,9 +18,13 @@ export function SignupForm() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Synchronous guard against double-submit (e.g. Enter pressed mid-flight).
+  const submittingRef = useRef(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setSubmitting(true);
 
@@ -34,6 +38,7 @@ export function SignupForm() {
     });
 
     if (signUpError !== null) {
+      submittingRef.current = false;
       setSubmitting(false);
       setError(signUpError.message);
       return;

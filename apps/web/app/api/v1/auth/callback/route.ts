@@ -10,7 +10,9 @@
  * Sets the auth cookie on the redirect response, then sends the user to
  * the `next` query param (defaults to /app).
  */
+import type { EmailOtpType } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
+import { safeRedirectPath } from '../../../../../lib/auth/public-paths';
 import { createSupabaseServerClient } from '../../../../../lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -21,7 +23,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const code = url.searchParams.get('code');
   const tokenHash = url.searchParams.get('token_hash');
   const type = url.searchParams.get('type');
-  const next = url.searchParams.get('next') ?? '/app';
+  // Open-redirect protection: only relative same-origin paths allowed.
+  const next = safeRedirectPath(url.searchParams.get('next'));
 
   const supabase = await createSupabaseServerClient();
 
@@ -36,8 +39,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Email verification / recovery path.
   if (tokenHash !== null && type !== null) {
-    // biome-ignore lint/suspicious/noExplicitAny: supabase narrows EmailOtpType internally
-    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any });
+    // type is EmailOtpType ("signup" | "invite" | "magiclink" | "recovery" |
+    // "email_change" | "email"). We narrow the URL string to that union;
+    // Supabase rejects unknown values server-side.
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: type as EmailOtpType,
+    });
     if (error !== null) {
       return redirectToError(request, `verify: ${error.message}`);
     }

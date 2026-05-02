@@ -48,3 +48,21 @@ export function isPublicPath(pathname: string): boolean {
 export function shouldSkipSession(pathname: string): boolean {
   return pathname.startsWith('/api/v1/webhooks/') || pathname === '/api/v1/health';
 }
+
+/**
+ * Sanitises a `next` / `returnTo` URL parameter to prevent open-redirect
+ * attacks. Only same-origin relative paths starting with a single `/`
+ * are allowed. Anything else (absolute URLs, protocol-relative URLs,
+ * `//evil.com`, paths with backslashes) is rejected and replaced with
+ * the provided fallback.
+ *
+ * Spec 002 — see `code-reviewer` finding #1 (open redirect via `next`).
+ */
+export function safeRedirectPath(raw: string | null | undefined, fallback = '/app'): string {
+  if (raw === null || raw === undefined || raw === '') return fallback;
+  // Must start with `/` AND second char must NOT be `/` or `\` (which
+  // would make it protocol-relative or a Windows-style hijack).
+  if (raw === '/') return raw;
+  if (raw.length >= 2 && raw[0] === '/' && raw[1] !== '/' && raw[1] !== '\\') return raw;
+  return fallback;
+}
