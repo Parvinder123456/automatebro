@@ -20,10 +20,15 @@ export const Env = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   STRICTDB_URI: z.string().url(),
   REDIS_URL: z.string().url(),
-  // Reserved for spec 002 — not consumed in spec 001.
-  SUPABASE_URL: z.string().url().optional(),
-  SUPABASE_ANON_KEY: z.string().min(1).optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  // Supabase (spec 002+) — required from now on.
+  // The unprefixed and NEXT_PUBLIC_-prefixed URLs / anon keys must
+  // hold the same value. Browser bundles only see NEXT_PUBLIC_*; the
+  // Node-only SERVICE_ROLE key never reaches the browser.
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_ANON_KEY: z.string().min(1),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
 export type EnvType = z.infer<typeof Env>;

@@ -8,13 +8,13 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @automatebro/web dev",
-    "dev:website": "pnpm --filter @automatebro/web dev -- -p 3000",
-    "dev:api": "pnpm --filter @automatebro/web dev -- -p 3001",
-    "dev:dashboard": "pnpm --filter @automatebro/web dev -- -p 3002",
-    "dev:test:website": "pnpm --filter @automatebro/web dev -- -p 4000",
-    "dev:test:api": "pnpm --filter @automatebro/web dev -- -p 4010",
-    "dev:test:dashboard": "pnpm --filter @automatebro/web dev -- -p 4020",
+    "dev": "pnpm --filter @automatebro/web exec next dev",
+    "dev:website": "pnpm --filter @automatebro/web exec next dev -p 3000",
+    "dev:api": "pnpm --filter @automatebro/web exec next dev -p 3001",
+    "dev:dashboard": "pnpm --filter @automatebro/web exec next dev -p 3002",
+    "dev:test:website": "pnpm --filter @automatebro/web exec next dev -p 4000",
+    "dev:test:api": "pnpm --filter @automatebro/web exec next dev -p 4010",
+    "dev:test:dashboard": "pnpm --filter @automatebro/web exec next dev -p 4020",
     "dev:worker": "pnpm --filter @automatebro/worker dev",
     "build": "pnpm -r build",
     "start": "pnpm --filter @automatebro/web start",
@@ -39,6 +39,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@playwright/test": "^1.48.0",
+    "@supabase/supabase-js": "^2.105.1",
     "@types/node": "^20.16.0",
     "@vitest/coverage-v8": "^2.1.0",
     "rimraf": "^6.0.0",

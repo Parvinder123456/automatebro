@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@automatebro/shared": "workspace:*",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.105.1",
     "ioredis": "^5.4.1",
     "next": "^15.0.0",
     "react": "^19.0.0",

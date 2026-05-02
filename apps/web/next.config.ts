@@ -5,6 +5,21 @@ const config: NextConfig = {
   // Transpile our workspace package since it ships TypeScript source,
   // not built JavaScript.
   transpilePackages: ['@automatebro/shared'],
+  // strictdb statically imports every DB driver — only `pg` is used in
+  // production, but mongodb / mssql / mysql2 / better-sqlite3 are all
+  // pulled into the Server bundle. Webpack then trips on optional peer
+  // deps (aws4, kerberos, snappy, etc.). Mark all of them as external
+  // so they're require()d at runtime by Node, not bundled by Webpack.
+  serverExternalPackages: [
+    'strictdb',
+    'pg',
+    'mongodb',
+    'mssql',
+    'mysql2',
+    'better-sqlite3',
+    'bullmq',
+    'ioredis',
+  ],
   // Map .js imports to .ts source files for the workspace package.
   // Required because we author imports as `from '../env.js'` (ESM-correct
   // for Node) but Next.js webpack doesn't auto-resolve .js → .ts.
