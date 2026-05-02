@@ -50,10 +50,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectToIntegrations(request, { error: 'missing_code_or_state' });
   }
 
-  // Cookie-bound state check (defence-in-depth — state HMAC also verified below).
+  // Cookie-bound state check. The cookie is REQUIRED — every legitimate
+  // callback must have arrived via /start in the same browser session.
+  // If the cookie is missing or doesn't match, the state was likely
+  // replayed from a referrer leak or arrived from a different session.
   const cookieState = request.cookies.get('meta_oauth_state')?.value;
-  if (cookieState !== undefined && cookieState !== state) {
-    logger.warn('meta callback: state cookie mismatch — possible CSRF');
+  if (cookieState === undefined || cookieState !== state) {
+    logger.warn('meta callback: state cookie missing or mismatched — possible CSRF');
     return redirectToIntegrations(request, { error: 'state_mismatch' });
   }
 
@@ -94,7 +97,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       { err: message, tenantId: ctx.tenantId },
       'connectIgAccount threw — see server logs for stack',
     );
-    return redirectToIntegrations(request, { error: 'connect_failed', message });
+    // Generic error code only — do NOT leak internal error details
+    // through the redirect URL (browser history, referrers, analytics).
+    return redirectToIntegrations(request, { error: 'connect_failed' });
   }
 
   // Clear state cookie + redirect to integrations page.

@@ -6,7 +6,29 @@ import { getCtx } from '../../../../lib/auth/get-ctx';
 export const metadata = { title: 'Integrations — AutomateBro' };
 
 interface PageProps {
-  searchParams: Promise<{ connected?: string; error?: string; message?: string }>;
+  searchParams: Promise<{ connected?: string; error?: string }>;
+}
+
+/**
+ * Translate machine-friendly error codes from the OAuth callback into
+ * human-readable messages. We never echo the raw URL param into the UI
+ * to prevent reflected XSS or content-injection.
+ */
+function errorMessageFor(code: string): string {
+  switch (code) {
+    case 'access_denied':
+      return 'You declined the permission. Connect again to grant access.';
+    case 'state_mismatch':
+    case 'invalid_state':
+    case 'tenant_mismatch':
+      return 'The session expired or was tampered with. Please try again.';
+    case 'missing_code_or_state':
+      return 'Meta did not return a valid response. Please try again.';
+    case 'connect_failed':
+      return 'Something went wrong on our end while connecting your account. Please retry; the team has been notified.';
+    default:
+      return 'Connection failed. Please try again.';
+  }
 }
 
 /**
@@ -46,8 +68,7 @@ export default async function IntegrationsPage({ searchParams }: PageProps) {
           className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800"
           data-testid="connect-error"
         >
-          Could not connect: {errorCode}
-          {params.message ? ` — ${params.message}` : ''}
+          {errorMessageFor(errorCode)}
         </div>
       )}
 

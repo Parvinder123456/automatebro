@@ -59,35 +59,53 @@ export interface EncryptedToken {
 }
 
 /**
- * Encrypt a token (any UTF-8 string). Returns the ciphertext, IV,
- * and auth tag — store all three. The key version isn't returned;
- * callers should record it (currently always 1).
+ * Encrypt a token (any UTF-8 string), binding the ciphertext to a
+ * specific context via Additional Authenticated Data (AAD).
+ *
+ * AAD is the natural identity of the row holding this ciphertext —
+ * for igAccounts we pass the `igUserId`. Without AAD, an attacker who
+ * gets read+write access to the igAccounts table could swap encrypted
+ * blobs between tenants (move A's ciphertext+iv+tag to B's row); on
+ * decrypt with AAD, that attempt fails because B's igUserId differs
+ * from A's.
+ *
+ * Caller MUST pass the same AAD on decrypt. AAD is not stored — it's
+ * recomputed from the row's other columns at decrypt time.
  */
-export function encryptToken(plaintext: string): EncryptedToken {
+export function encryptToken(plaintext: string, aad: string): EncryptedToken {
   if (plaintext.length === 0) {
     throw new Error('encryptToken: empty plaintext is not allowed');
+  }
+  if (aad.length === 0) {
+    throw new Error('encryptToken: AAD is required (use the row identity, e.g. igUserId)');
   }
   const key = getKey();
   const iv = randomBytes(IV_BYTES);
   const cipher = createCipheriv(ALGORITHM, key, iv);
+  cipher.setAAD(Buffer.from(aad, 'utf8'));
   const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return { ciphertext, iv, tag };
 }
 
 /**
- * Decrypt a token. Throws if the ciphertext, IV, or tag has been
- * tampered with, or if the key has changed.
+ * Decrypt a token. Throws if any of: ciphertext / iv / tag has been
+ * tampered with, the key has changed, or the AAD does not match the
+ * value used at encrypt time.
  */
-export function decryptToken(encrypted: EncryptedToken): string {
+export function decryptToken(encrypted: EncryptedToken, aad: string): string {
   if (encrypted.iv.length !== IV_BYTES) {
     throw new Error(`decryptToken: IV must be ${IV_BYTES} bytes`);
   }
   if (encrypted.tag.length !== TAG_BYTES) {
     throw new Error(`decryptToken: tag must be ${TAG_BYTES} bytes`);
   }
+  if (aad.length === 0) {
+    throw new Error('decryptToken: AAD is required');
+  }
   const key = getKey();
   const decipher = createDecipheriv(ALGORITHM, key, encrypted.iv);
+  decipher.setAAD(Buffer.from(aad, 'utf8'));
   decipher.setAuthTag(encrypted.tag);
   const plaintext = Buffer.concat([decipher.update(encrypted.ciphertext), decipher.final()]);
   return plaintext.toString('utf8');
