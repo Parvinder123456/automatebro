@@ -33,6 +33,8 @@
 | **Database** | |
 | `pnpm db:query <name>` | Run a dev/test database query |
 | `pnpm db:query:list` | List all registered database queries |
+| `pnpm db:migrate` | Apply pending SQL migrations from `scripts/migrations/NNN-*.sql` (spec 003+) |
+| `pnpm db:migrate:check` | Exit 1 if any migration is pending (CI gate) |
 | **Content** | |
 | `pnpm content:build` | Build all published markdown → HTML |
 | `pnpm content:build:id <id>` | Build a single article by ID |
@@ -1026,3 +1028,51 @@ These augment — but never contradict — the rules in the cc-mastery section a
 ## Lessons learned (append-only; commit each addition)
 
 <!-- Format: YYYY-MM-DD — one-sentence rule. -->
+
+### Specs 001–005 lessons (2026-04-30 → 2026-05-03)
+
+**StrictDB / Postgres**
+- 2026-05-02 — StrictDB takes collection names LITERALLY at the SQL level. Tables and columns must use quoted camelCase identifiers (`"tenantUsers"`, `"tenantId"`) — Postgres folds unquoted identifiers to lowercase. Convention is preserved-camelCase in BOTH SQL and app code.
+- 2026-05-02 — `db.batch([...])` is sequential, NOT transactional. For multi-write atomicity (e.g. tenants + tenantUsers in createTenant), use `db.withTransaction(async (tx) => { … })` which wraps in BEGIN/COMMIT.
+- 2026-05-02 — StrictDB's TypeScript generics narrow on the concrete schema name. Dynamic dispatch (collection-name-as-string) requires an `as never` cast at the boundary; the runtime Zod validation still applies.
+- 2026-05-02 — `$setOnInsert` alone in an upsert is rejected by StrictDB; combine with `$set: { … }` so the update body has at least one set clause.
+- 2026-05-02 — `db.queryMany` enforces a `limit` — every call must include `{ limit: N }` or it throws.
+- 2026-05-02 — `db.describe()` / `information_schema` queries don't work; StrictDB only allows queries against registered collections. Smoke-test connection by registering a collection and running `db.count(coll, {})`.
+
+**Migrations**
+- 2026-05-02 — Migration runner uses `pg` directly — this is the FIRST documented exception to the "no native pg" rule (StrictDB has no DDL surface). The runner records sha256 checksums and refuses to re-apply edited files.
+- 2026-05-02 — Compute migration checksums on LF-normalised content (`replace(/\r\n/g, '\n')` before hashing) so Windows + Linux developers don't see "content changed" errors. `.gitattributes` also forces eol=lf for `*.sql`.
+
+**Multi-tenancy**
+- 2026-05-02 — `repo.*` is the chokepoint: it auto-merges `{ tenantId: ctx.tenantId }` and OVERRIDES any `tenantId` the caller put in the filter. Direct `db.*` calls bypass this — only `tenants` / `users` (which have no tenantId) are exempt. Code review enforces "use repo, not db" for handlers.
+- 2026-05-02 — `repo.updateOne` also strips `tenantId` from `$set` / `$setOnInsert` payloads. A symmetric defence: scoping the filter prevents READ leaks; stripping tenantId from updates prevents row-MOVE attacks.
+
+**Auth / OAuth**
+- 2026-05-02 — Open redirect via `?next=…` or `?returnTo=…` is a real attack against post-auth redirects. Use `safeRedirectPath()` to reject anything except same-origin paths starting with `/` (and not `//`).
+- 2026-05-02 — `SUPABASE_SERVICE_ROLE_KEY` should NOT live in shared `Env`. Tests read it from `process.env` directly with `skipIf(!hasInfra)` — keeps the high-privilege key out of every server route's process memory.
+- 2026-05-02 — Add `.refine()` checks ensuring `SUPABASE_URL === NEXT_PUBLIC_SUPABASE_URL` (and same for anon keys) — catches misconfigured deploys at boot.
+- 2026-05-02 — Browser client reads from `PublicEnv` (a typed const exported from `env.ts`) — never `process.env.NEXT_PUBLIC_*` directly. Preserves the "process.env only in env.ts" rule.
+
+**Crypto**
+- 2026-05-03 — AES-GCM without AAD allows row-swap attacks (move tenant A's encrypted bytes onto tenant B's row, decrypt succeeds). ALWAYS bind ciphertext to row identity via `cipher.setAAD(igUserId)` / `decipher.setAAD(igUserId)`.
+- 2026-05-03 — OAuth state must be HMAC-SIGNED (defends against forgery without the secret) AND cookie-bound (defends against state replay from a different session). The cookie check must REQUIRE the cookie — checking only when present is a hollow defence.
+- 2026-05-03 — Webhook signature verification reads the RAW body via `request.text()`. Once `request.json()` consumes the stream, `request.text()` returns empty. Order matters; do verification first.
+- 2026-05-03 — Meta does NOT send a stable event id on webhook deliveries. Synthesise one via SHA-256 of canonical fields (`entry.id|entry.time|change.field|change.value.id|JSON.stringify(value)`). The synthesised id goes into a UNIQUE column on `events.metaEventId` for idempotent dedupe.
+
+**Forms / hydration**
+- 2026-05-03 — Playwright clicks fire BEFORE React hydration in dev. Forms submit as native HTML (GET to current URL) instead of triggering `onSubmit`. Add a `data-hydrated="true"` attribute set by `useEffect(() => setHydrated(true), [])`, disable the submit button while `!hydrated`, and have tests `await expect(form).toHaveAttribute('data-hydrated', 'true')` before fill+click.
+- 2026-05-03 — `useRef` synchronous guard alongside the React state for double-submit prevention. Setting `submittingRef.current = true` is synchronous; `setSubmitting(true)` is async — Enter pressed mid-flight can fire two submits before disabled propagates.
+- 2026-05-03 — On Server Components, read pathname via `headers().get('x-pathname')` after middleware sets it on the FORWARDED REQUEST headers (not response). Pattern: `NextResponse.next({ request: { headers: forwardedHeaders } })` where `forwardedHeaders = new Headers(request.headers)` then `forwardedHeaders.set('x-pathname', pathname)`.
+- 2026-05-03 — App Router needs an explicit `app/not-found.tsx`. Without it, Next.js falls back to the legacy pages-router `_error` which uses `<Html>` and breaks `next build` with a confusing prerender error.
+
+**Build / deploy**
+- 2026-05-03 — `next build` expects `NODE_ENV=production`. If `.env` has `NODE_ENV=development`, the build emits warnings and fails with `<Html>` errors. Tests/builds run with `unset NODE_ENV` so Next can set it correctly.
+- 2026-05-03 — Next.js `serverExternalPackages` for native-binary or eager-import-everything packages (`strictdb`, `pg`, `mongodb`, `mssql`, `mysql2`, `better-sqlite3`, `bullmq`, `ioredis`). Otherwise Webpack tries to bundle MongoDB's optional peer deps (`aws4`, `kerberos`, `snappy`) and fails.
+- 2026-05-03 — pnpm's `pnpm <pkg> dev -- -p N` doesn't work with Next 15 — pnpm passes `--` to next which interprets it as the project directory. Use `pnpm --filter <pkg> exec next dev -p N` instead.
+- 2026-05-03 — `tsx` direct + Windows + SIGINT: `proc.kill('SIGINT')` on Windows hard-kills the child instead of sending a real signal, so the worker's signal handler never runs. Test split: SIGINT-dependent tests skip on Windows (`describe.skipIf(!hasInfra || isWindows)`), boot+heartbeat tests run cross-platform.
+
+**Tests**
+- 2026-05-03 — Playwright `fullyParallel: true` causes race conditions when tests share a dev server + Supabase project. Use `fullyParallel: false` + `workers: 1` (serial) for stability.
+- 2026-05-03 — `tests/e2e/*.spec.ts` cleanup helpers import `pg` directly because Playwright runs out-of-process from the dev server (no `getDb()` singleton available). This is the SECOND documented exception to "no native pg" (alongside `scripts/db-migrate.ts`).
+- 2026-05-03 — In test files, `process.env.X = undefined` sets the LITERAL string `"undefined"`. Use `delete process.env.X` instead (with `// biome-ignore lint/performance/noDelete` since Biome flags it).
+
