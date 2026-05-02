@@ -1076,3 +1076,13 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-03 — `tests/e2e/*.spec.ts` cleanup helpers import `pg` directly because Playwright runs out-of-process from the dev server (no `getDb()` singleton available). This is the SECOND documented exception to "no native pg" (alongside `scripts/db-migrate.ts`).
 - 2026-05-03 — In test files, `process.env.X = undefined` sets the LITERAL string `"undefined"`. Use `delete process.env.X` instead (with `// biome-ignore lint/performance/noDelete` since Biome flags it).
 
+### Spec 006 lessons (2026-05-03)
+
+- 2026-05-03 — BullMQ's `groupKey` per-key rate limiter is a **Pro-only** feature. OSS BullMQ's `Worker.limiter` is GLOBAL across all jobs. For per-account rate limiting, implement a Redis sliding-window sorted set inside the handler (lands in spec 007's sendDM).
+- 2026-05-03 — `Queue.add(name, data, { group: { id: ... } })` won't typecheck with OSS BullMQ — `group` is a Pro-only `JobsOptions` field.
+- 2026-05-03 — `packages/shared/package.json` `exports` map MUST list every subpath consumers import (`./queue/jobTypes`, `./types/tenant`, etc.). Missing entries cause `Cannot find module '@automatebro/shared/X'` at typecheck time even though the file exists. When adding new files under `packages/shared/src/`, also add the export.
+- 2026-05-03 — Vitest tests at root that import `bullmq`/`ioredis`/`pg` directly need those packages in **root** `devDependencies`, not just in `apps/*` or `packages/*`. pnpm workspace isolation means root tests can't reach into workspace `node_modules`.
+- 2026-05-03 — When Worker.close() is called during shutdown, BullMQ waits for in-flight jobs to finish before resolving. Always call `worker.close()` BEFORE `closeQueue()` and `closeDb()` so jobs don't get killed mid-DB-write.
+- 2026-05-03 — Job handler stubs (for unimplemented future-spec types) must NOT throw — BullMQ would retry the job and pile up failures. Stubs log + return successfully; the real implementation lands in the dedicated spec.
+- 2026-05-03 — Discriminated-union job payloads with `z.discriminatedUnion('type', [...])` give us type narrowing in the dispatcher (`switch (data.type)`) and a single Zod parse before any handler logic — every job validates against the same schema.
+
