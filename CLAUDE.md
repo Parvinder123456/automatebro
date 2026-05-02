@@ -1086,3 +1086,13 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-03 — Job handler stubs (for unimplemented future-spec types) must NOT throw — BullMQ would retry the job and pile up failures. Stubs log + return successfully; the real implementation lands in the dedicated spec.
 - 2026-05-03 — Discriminated-union job payloads with `z.discriminatedUnion('type', [...])` give us type narrowing in the dispatcher (`switch (data.type)`) and a single Zod parse before any handler logic — every job validates against the same schema.
 
+### Spec 007 lessons (2026-05-03)
+
+- 2026-05-03 — TypeScript with `exactOptionalPropertyTypes` rejects `null as const` and `null as null` returns from async helpers used in discriminated-union returns. Use a named `type AuthResult = { ctx: AuthCtx; response: null } | { ctx: null; response: NextResponse }` and the union narrows correctly. Saves five minutes of head-scratching.
+- 2026-05-03 — `db.queryMany('events', filter, { sort: { receivedAt: -1 } })` doesn't typecheck because StrictDB's SortSpec generic narrows on the registered schema's keys — `receivedAt` IS in EventSchema but the dynamic call site loses it. Cast the sort object: `{ sort: { receivedAt: -1 } as never }`. Same pattern as the filter casts in repo.ts.
+- 2026-05-03 — Redis sliding-window rate limit pattern: `ZREMRANGEBYSCORE` (evict expired), `ZADD` (add current attempt with score=now), `ZCARD` (count), `EXPIRE` (auto-cleanup). If `ZCARD > cap`, `ZREM` your just-added member to roll back. Pipeline for atomicity (BullMQ Pro's `groupKey` is the alternative, paid).
+- 2026-05-03 — Decryption needs the SAME AAD as encryption. In sendDM, `decryptToken({ ciphertext, iv, tag }, account.igUserId)` — `igUserId` is what we used at encrypt time in connectIgAccount. Passing the wrong AAD throws an authentication-tag-mismatch error.
+- 2026-05-03 — Job handler stubs (spec 006) had to NOT throw. Real handlers (spec 007 sendDM) DO throw on retryable failures so BullMQ retries with backoff. Two paths: 4xx (`status: 'failed'`, mark and stop, return); 5xx/timeout/rate-limit (`throw err with retryable=true`, BullMQ delays + retries).
+- 2026-05-03 — Postgres CHECK constraints on enum-like columns (`status IN ('queued','sent', ...)`) catch typos at insert time. Worth the 5 lines of SQL — silent data corruption is otherwise the easy failure mode.
+- 2026-05-03 — `withTransaction` for multi-row creates: `createAutomation` inserts 3 rows (automations + triggers + responses). If any fails, none persist. Without it, a partial automation breaks listAutomations later (orphan rows).
+
