@@ -31,12 +31,13 @@ test.describe('login flows (integration)', () => {
   test('E2: login happy path → /onboarding', async ({ page }) => {
     if (!user) throw new Error('user not created');
     await page.goto('/login');
+    await page.waitForLoadState('networkidle'); // wait for React hydration
     await page.getByLabel('Email').fill(user.email);
     await page.getByLabel('Password').fill(user.password);
     await page.getByTestId('login-submit').click();
 
     // After login, /app redirects to /onboarding (spec 002 placeholder).
-    await page.waitForURL(/\/onboarding$/, { timeout: 15_000, waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/\/onboarding$/, { timeout: 30_000, waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/\/onboarding$/);
     await expect(page.getByTestId('onboarding-page')).toBeVisible();
     await expect(page.locator('strong')).toContainText(user.email);
@@ -57,15 +58,16 @@ test.describe('login flows (integration)', () => {
     if (!user) throw new Error('user not created');
     // log in
     await page.goto('/login');
+    await page.waitForLoadState('networkidle'); // wait for React hydration
     await page.getByLabel('Email').fill(user.email);
     await page.getByLabel('Password').fill(user.password);
     await page.getByTestId('login-submit').click();
-    await page.waitForURL(/\/onboarding$/, { timeout: 15_000, waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/\/onboarding$/, { timeout: 30_000, waitUntil: 'domcontentloaded' });
 
     // sign out
     await page.locator('form[action="/logout"] button[type="submit"]').click();
     await page.waitForURL(/^https?:\/\/[^/]+\/?$/, {
-      timeout: 10_000,
+      timeout: 20_000,
       waitUntil: 'domcontentloaded',
     });
     await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);

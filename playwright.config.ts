@@ -13,14 +13,23 @@ const BASE_URL = `http://localhost:${TEST_API_PORT}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  // Tests share a single dev server + Supabase project, and our
+  // integration suite touches real users + tenants. Parallel runs
+  // exhibited race conditions where one test's fetch lookups saw
+  // another test's writes. Serial execution keeps the suite stable;
+  // total runtime is still under 3 minutes.
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: process.env.CI ? [['github'], ['html']] : 'html',
-  timeout: 30_000,
+  // Dev-server first-render takes ~10s (Next compile) + ~6s (StrictDB
+  // schema register + ensureIndexes) before any test can interact.
+  // Subsequent tests reuse the warm process. Per-test timeout is generous
+  // to absorb both.
+  timeout: 90_000,
   expect: {
-    timeout: 10_000,
+    timeout: 15_000,
   },
   use: {
     baseURL: BASE_URL,

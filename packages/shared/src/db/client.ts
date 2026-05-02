@@ -15,6 +15,7 @@
 import { StrictDB } from 'strictdb';
 import { loadEnv } from '../env.js';
 import { logger } from '../logger.js';
+import { registerSchemas } from './schema.js';
 
 /**
  * Subset of the StrictDB shutdown surface we care about. We do NOT
@@ -36,7 +37,20 @@ let dbPromise: Promise<StrictDB> | null = null;
 export function getDb(): Promise<StrictDB> {
   if (dbPromise === null) {
     const env = loadEnv();
-    dbPromise = StrictDB.create({ uri: env.STRICTDB_URI });
+    dbPromise = StrictDB.create({ uri: env.STRICTDB_URI }).then(async (db) => {
+      // Register schemas + create indexes once per process. Idempotent
+      // (StrictDB tracks both internally).
+      registerSchemas(db);
+      try {
+        await db.ensureIndexes();
+      } catch (err) {
+        logger.warn(
+          { err: err instanceof Error ? err.message : String(err) },
+          'getDb: ensureIndexes failed (continuing — indexes are best-effort on existing tables)',
+        );
+      }
+      return db;
+    });
   }
   return dbPromise;
 }

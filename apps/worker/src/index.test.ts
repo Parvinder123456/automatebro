@@ -122,7 +122,9 @@ describe.skipIf(!hasInfra)('apps/worker/src/index.ts — boot + heartbeat (integ
     const redis = new Redis(process.env.REDIS_URL ?? '', { maxRetriesPerRequest: 1 });
     try {
       active = spawnWorker({ ...process.env });
-      const ready = await active.waitForOutput((s) => s.includes('worker ready'), 15_000);
+      // Cold start can take ~10–14s on Windows once schema registration
+      // + index ensure runs against Supabase. 30s is comfortable.
+      const ready = await active.waitForOutput((s) => s.includes('worker ready'), 30_000);
       expect(ready).toBe(true);
 
       // Heartbeat interval is 30s; worker should write one on boot.
@@ -139,7 +141,7 @@ describe.skipIf(!hasInfra)('apps/worker/src/index.ts — boot + heartbeat (integ
     } finally {
       await redis.quit();
     }
-  }, 30_000);
+  }, 60_000);
 });
 
 describe.skipIf(hasInfra)('apps/worker/src/index.ts — bootstrap (no infra)', () => {

@@ -1,28 +1,28 @@
-import { createSupabaseServerClient } from '../../../lib/supabase/server';
+import { WorkspaceForm } from '../../../components/onboarding/workspace-form';
+import { getCtx } from '../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'Welcome — AutomateBro' };
 
 /**
- * Spec 002 — placeholder. Spec 003 turns this into a real workspace-name
- * form that creates a `tenants` row.
+ * Spec 003 — onboarding. Shows the workspace-name form.
+ *
+ * The (app)/layout.tsx redirects users who already have a tenant to
+ * /app/dashboard before this page renders, so we can assume the user
+ * is in pre-tenant state when the page is shown.
  */
 export default async function OnboardingPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const ctx = await getCtx();
 
   return (
-    <main className="mx-auto max-w-2xl p-8" data-testid="onboarding-page">
-      <h1 className="mb-4 text-3xl font-semibold">Welcome to AutomateBro</h1>
-      <p className="text-gray-700">
-        You&apos;re signed in as <strong>{user?.email ?? 'unknown'}</strong>.
+    <main className="mx-auto max-w-md p-8" data-testid="onboarding-page">
+      <h1 className="mb-2 text-3xl font-semibold">Welcome to AutomateBro</h1>
+      <p className="mb-6 text-sm text-gray-600">
+        Signed in as <strong>{ctx?.email ?? 'unknown'}</strong>. Pick a name for your workspace to
+        get started.
       </p>
-      <p className="mt-4 text-gray-700">
-        Spec 003 will replace this page with a workspace-name form that creates your tenant.
-      </p>
+      <WorkspaceForm />
       <form action="/logout" method="POST" className="mt-6">
-        <button type="submit" className="rounded border px-4 py-2 text-sm">
+        <button type="submit" className="text-xs text-gray-500 underline">
           Sign out
         </button>
       </form>

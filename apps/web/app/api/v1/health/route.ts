@@ -1,11 +1,12 @@
 /**
  * GET /api/v1/health
  *
- * Spec 001 §9 — health endpoint contract.
+ * Spec 001 §9 + spec 003 §10.7 — health endpoint contract.
  *
- * Shallow checks in spec 001:
- *  - DB: getDb() resolved without throwing (no real query because no
- *    schemas are registered yet — spec 003 upgrades this).
+ * Checks:
+ *  - DB: db.count('tenants', {}) returns successfully (proves auth +
+ *    table existence + query path; was a shallow client check until
+ *    spec 003 added the tenants table).
  *  - Redis: an ephemeral ioredis connection ping() returned PONG.
  *
  * Why an ephemeral Redis connection (NOT the shared queue connection):
@@ -49,9 +50,9 @@ const REDIS_TIMEOUT_MS = 2_000;
 async function checkDb(): Promise<DbCheck> {
   try {
     const db = await getDb();
-    if (typeof db.queryOne !== 'function') {
-      return { ok: false, error: 'StrictDB API surface not present' };
-    }
+    // Real round-trip — proves auth + table + query path. The result
+    // is irrelevant; we just need it to not throw.
+    await db.count('tenants', {});
     return { ok: true, backend: 'postgresql' };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };

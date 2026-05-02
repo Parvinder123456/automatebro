@@ -24,6 +24,8 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   const { response, user } = await refreshSession(request);
+  // refreshSession sets x-pathname on the forwarded request headers
+  // so Server Component layouts can read it via next/headers.
 
   // Public routes: pass through with refreshed session cookie.
   if (isPublicPath(pathname)) {

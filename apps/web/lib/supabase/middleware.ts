@@ -23,7 +23,13 @@ export interface SessionRefreshResult {
 }
 
 export async function refreshSession(request: NextRequest): Promise<SessionRefreshResult> {
-  let response = NextResponse.next({ request });
+  // Forward an x-pathname header so Server Components / layouts can
+  // read the request path via next/headers without re-parsing the URL.
+  // Spec 003 §8.3.
+  const forwardedHeaders = new Headers(request.headers);
+  forwardedHeaders.set('x-pathname', request.nextUrl.pathname);
+
+  let response = NextResponse.next({ request: { headers: forwardedHeaders } });
   const env = loadEnv();
 
   const supabase = createServerClient(
@@ -41,7 +47,7 @@ export async function refreshSession(request: NextRequest): Promise<SessionRefre
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: { headers: forwardedHeaders } });
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
