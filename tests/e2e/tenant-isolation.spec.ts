@@ -13,7 +13,6 @@
  * available here.
  */
 import { expect, test } from '@playwright/test';
-// biome-ignore lint/style/useImportType: Client is used as a value
 import { Client } from 'pg';
 import { type TestUser, createTestUser, deleteTestUser } from './_fixtures/auth.js';
 

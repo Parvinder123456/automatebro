@@ -16,7 +16,6 @@ import { expect, test } from '@playwright/test';
  * here. The other documented exception is `scripts/db-migrate.ts`. Both
  * are confined to scripts/tests; no app code imports pg directly.
  */
-// biome-ignore lint/style/useImportType: Client is used as a value (new Client(...))
 import { Client } from 'pg';
 import { type TestUser, createTestUser, deleteTestUser } from './_fixtures/auth.js';
 

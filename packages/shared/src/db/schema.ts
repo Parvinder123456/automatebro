@@ -39,6 +39,24 @@ export const TenantUserSchema = z.object({
   acceptedAt: z.date(),
 });
 
+export const IgAccountSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  igUserId: z.string().min(1),
+  igUsername: z.string().min(1),
+  pageId: z.string().min(1),
+  pageName: z.string().nullable().optional(),
+  accessTokenCiphertext: z.instanceof(Buffer).or(z.instanceof(Uint8Array)),
+  accessTokenIv: z.instanceof(Buffer).or(z.instanceof(Uint8Array)),
+  accessTokenTag: z.instanceof(Buffer).or(z.instanceof(Uint8Array)),
+  tokenKeyVersion: z.number().int().positive(),
+  tokenExpiresAt: z.date().nullable().optional(),
+  scopes: z.array(z.string()),
+  webhookSubscribedAt: z.date().nullable().optional(),
+  connectedAt: z.date(),
+  disconnectedAt: z.date().nullable().optional(),
+});
+
 /**
  * Register all v1 collections with StrictDB. Called by getDb() exactly
  * once per process. Subsequent specs add more collections to this list.
@@ -60,6 +78,15 @@ export function registerSchemas(db: StrictDB): void {
     indexes: [
       { collection: 'tenantUsers', fields: { tenantId: 1, userId: 1 }, unique: true },
       { collection: 'tenantUsers', fields: { userId: 1 } },
+    ],
+  });
+  db.registerCollection({
+    name: 'igAccounts',
+    schema: IgAccountSchema,
+    indexes: [
+      { collection: 'igAccounts', fields: { tenantId: 1, igUserId: 1 }, unique: true },
+      { collection: 'igAccounts', fields: { tenantId: 1 } },
+      { collection: 'igAccounts', fields: { igUserId: 1 } },
     ],
   });
 }

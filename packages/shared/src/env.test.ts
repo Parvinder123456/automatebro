@@ -19,6 +19,10 @@ const VALID_INFRA = {
   NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_ANON_KEY: 'eyJanon',
   NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJanon',
+  // Spec 004 additions: META_TOKEN_KEY must decode to 32 bytes.
+  META_APP_ID: '1234567890',
+  META_APP_SECRET: 'cccccccccccccccc1111111111111111',
+  META_TOKEN_KEY: Buffer.alloc(32, 1).toString('base64'),
 } as const;
 
 describe('packages/shared/src/env.ts', () => {
@@ -45,6 +49,14 @@ describe('packages/shared/src/env.ts', () => {
     delete process.env.SUPABASE_ANON_KEY;
     // biome-ignore lint/performance/noDelete: env-var unset semantics
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.META_APP_ID;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.META_APP_SECRET;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.META_TOKEN_KEY;
+    // biome-ignore lint/performance/noDelete: env-var unset semantics
+    delete process.env.NEXT_PUBLIC_SITE_URL;
   });
 
   afterEach(() => {

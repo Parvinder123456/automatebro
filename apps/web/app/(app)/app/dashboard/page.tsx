@@ -31,6 +31,15 @@ export default async function DashboardPage() {
       <p className="mt-6 text-sm text-gray-600">
         This is a placeholder. Automation builder, send history, and leads land in spec 011.
       </p>
+      <p className="mt-2">
+        <a
+          href="/app/integrations"
+          className="inline-block rounded border px-4 py-2 text-sm"
+          data-testid="link-integrations"
+        >
+          Manage Instagram connections →
+        </a>
+      </p>
       <form action="/logout" method="POST" className="mt-6">
         <button type="submit" className="rounded border px-4 py-2 text-sm">
           Sign out

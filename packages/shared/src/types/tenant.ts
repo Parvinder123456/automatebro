@@ -7,9 +7,10 @@
  * parsing of untrusted input.
  */
 import type { z } from 'zod';
-import type { TenantSchema, TenantUserSchema, UserSchema } from '../db/schema.js';
+import type { IgAccountSchema, TenantSchema, TenantUserSchema, UserSchema } from '../db/schema.js';
 
 export type Tenant = z.infer<typeof TenantSchema>;
 export type User = z.infer<typeof UserSchema>;
 export type TenantUser = z.infer<typeof TenantUserSchema>;
 export type Role = TenantUser['role'];
+export type IgAccount = z.infer<typeof IgAccountSchema>;

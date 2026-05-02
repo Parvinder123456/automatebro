@@ -32,6 +32,20 @@ export const Env = z
     SUPABASE_ANON_KEY: z.string().min(1),
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+    // Meta (spec 004+) — Facebook Login for Business OAuth + Instagram Graph API.
+    // META_APP_SECRET is also used as the HMAC key for the OAuth state cookie.
+    // META_TOKEN_KEY is base64-encoded 32 random bytes (AES-256-GCM data key).
+    // Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
+    META_APP_ID: z.string().regex(/^\d+$/, 'META_APP_ID must be numeric'),
+    META_APP_SECRET: z.string().min(16),
+    META_TOKEN_KEY: z
+      .string()
+      .min(1)
+      .refine((s) => Buffer.from(s, 'base64').length === 32, {
+        message:
+          'META_TOKEN_KEY must be base64-encoded 32 random bytes (use openssl rand -base64 32)',
+      }),
+    NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   })
   // Defence-in-depth: a misconfigured deploy could point browser and server
   // at different Supabase projects. Catch it at boot.
