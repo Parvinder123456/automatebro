@@ -1,50 +1,45 @@
-import { getDb } from '@automatebro/shared/db/client';
-import type { Tenant } from '@automatebro/shared/types/tenant';
+import { countLeads } from '@automatebro/shared/handlers/leads/countLeads';
+import { countSendsLast24h } from '@automatebro/shared/handlers/sends/countSendsLast24h';
+import { listAutomations } from '@automatebro/shared/handlers/automations/listAutomations';
+import { listIgAccounts } from '@automatebro/shared/handlers/igAccounts/listIgAccounts';
 import { redirect } from 'next/navigation';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'Dashboard — AutomateBro' };
 
-/**
- * Spec 003 — placeholder dashboard. Shows the user's email + workspace
- * name. Spec 011 replaces this with a real automation/leads/sends UI.
- */
 export default async function DashboardPage() {
   const ctx = await getCtx();
   if (ctx === null || ctx.tenantId === null) {
-    // Defence in depth — the layout should have redirected already.
     redirect('/onboarding');
   }
 
-  const db = await getDb();
-  const tenant = await db.queryOne<Tenant>('tenants', { _id: ctx.tenantId });
+  const [automations, accounts, leadCount, sendCount] = await Promise.all([
+    listAutomations(ctx),
+    listIgAccounts(ctx),
+    countLeads(ctx),
+    countSendsLast24h(ctx),
+  ]);
+
+  const activeAutomations = automations.filter((a) => a.automation.status === 'active').length;
+
+  const cards = [
+    { label: 'Active automations', value: activeAutomations },
+    { label: 'IG accounts', value: accounts.length },
+    { label: 'Leads captured', value: leadCount },
+    { label: 'Sends (24h)', value: sendCount },
+  ];
 
   return (
-    <main className="mx-auto max-w-2xl p-8" data-testid="dashboard-page">
-      <h1 className="mb-4 text-3xl font-semibold">Dashboard</h1>
-      <p className="text-gray-700">
-        Workspace: <strong data-testid="workspace-name">{tenant?.name ?? 'unknown'}</strong>
-      </p>
-      <p className="text-sm text-gray-500">
-        Signed in as <strong>{ctx.email}</strong>
-      </p>
-      <p className="mt-6 text-sm text-gray-600">
-        This is a placeholder. Automation builder, send history, and leads land in spec 011.
-      </p>
-      <p className="mt-2">
-        <a
-          href="/app/integrations"
-          className="inline-block rounded border px-4 py-2 text-sm"
-          data-testid="link-integrations"
-        >
-          Manage Instagram connections →
-        </a>
-      </p>
-      <form action="/logout" method="POST" className="mt-6">
-        <button type="submit" className="rounded border px-4 py-2 text-sm">
-          Sign out
-        </button>
-      </form>
-    </main>
+    <div className="p-8" data-testid="dashboard-page">
+      <h1 className="mb-6 text-2xl font-semibold">Dashboard</h1>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded border p-4">
+            <div className="text-sm text-gray-600">{c.label}</div>
+            <div className="mt-1 text-2xl font-bold">{c.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

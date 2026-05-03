@@ -7,11 +7,12 @@
  * depend on next/headers) to the framework-agnostic getCtxFromUser()
  * in shared.
  */
+import { cache } from 'react';
 import { getCtxFromUser } from '@automatebro/shared/auth/ctx';
 import type { Ctx } from '@automatebro/shared/auth/ctx';
 import { createSupabaseServerClient } from '../supabase/server';
 
-export async function getCtx(): Promise<Ctx | null> {
+export const getCtx = cache(async (): Promise<Ctx | null> => {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -22,4 +23,4 @@ export async function getCtx(): Promise<Ctx | null> {
     email: user.email,
     user_metadata: user.user_metadata as { name?: string | null } | null,
   });
-}
+});
