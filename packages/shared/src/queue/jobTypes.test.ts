@@ -38,6 +38,7 @@ describe('JobData discriminator', () => {
       type: 'generate-ai-reply',
       eventId: '11111111-1111-4111-8111-111111111111',
       responseId: '44444444-4444-4444-8444-444444444444',
+      sendId: '55555555-5555-4555-8555-555555555555',
     });
     expect(parsed.type).toBe('generate-ai-reply');
   });

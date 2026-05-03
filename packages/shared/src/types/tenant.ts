@@ -8,6 +8,7 @@
  */
 import type { z } from 'zod';
 import type {
+  AiUsageSchema,
   AutomationSchema,
   EventSchema,
   IgAccountSchema,
@@ -30,3 +31,4 @@ export type Automation = z.infer<typeof AutomationSchema>;
 export type Trigger = z.infer<typeof TriggerSchema>;
 export type ResponseRecord = z.infer<typeof ResponseSchema>;
 export type Send = z.infer<typeof SendSchema>;
+export type AiUsage = z.infer<typeof AiUsageSchema>;

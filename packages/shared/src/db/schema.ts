@@ -51,6 +51,16 @@ export const EventSchema = z.object({
   processedAt: z.date().nullable().optional(),
 });
 
+export const AiUsageSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+  costInr: z.number().int().nonnegative(),
+  cap: z.number().int().positive(),
+});
+
 export const AutomationSchema = z.object({
   _id: z.string().uuid(),
   tenantId: z.string().uuid(),
@@ -183,6 +193,11 @@ export function registerSchemas(db: StrictDB): void {
       { collection: 'sends', fields: { tenantId: 1, status: 1 } },
       { collection: 'sends', fields: { igAccountId: 1, sentAt: -1 } },
     ],
+  });
+  db.registerCollection({
+    name: 'aiUsage',
+    schema: AiUsageSchema,
+    indexes: [{ collection: 'aiUsage', fields: { tenantId: 1, month: 1 }, unique: true }],
   });
 }
 

@@ -36,6 +36,9 @@ export const GenerateAiReplyJob = z.object({
   type: z.literal('generate-ai-reply'),
   eventId: z.string().uuid(),
   responseId: z.string().uuid(),
+  // Spec 008 — also carries the queued sends row id so the handler
+  // can update content + enqueue send-dm without re-deriving.
+  sendId: z.string().uuid(),
 });
 
 export const JobData = z.discriminatedUnion('type', [

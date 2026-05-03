@@ -48,6 +48,10 @@ export const Env = z
     // Webhook verify token — must match what's set in Meta dashboard
     // when registering the webhook callback URL.
     META_WEBHOOK_VERIFY_TOKEN: z.string().min(16),
+    // OpenAI API key (spec 008). Optional during initial dev — once
+    // populated, AI replies become available. The handler short-circuits
+    // gracefully when missing or empty.
+    OPENAI_API_KEY: z.string().optional(),
     NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   })
   // Defence-in-depth: a misconfigured deploy could point browser and server

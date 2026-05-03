@@ -32,7 +32,9 @@
     "./handlers/processCommentEvent": "./src/handlers/processCommentEvent.ts",
     "./handlers/sendDM": "./src/handlers/sendDM.ts",
     "./meta/rateLimit": "./src/meta/rateLimit.ts",
-    "./meta/messageWindow": "./src/meta/messageWindow.ts"
+    "./meta/messageWindow": "./src/meta/messageWindow.ts",
+    "./adapters/openai": "./src/adapters/openai.ts",
+    "./handlers/generateAiReply": "./src/handlers/generateAiReply.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

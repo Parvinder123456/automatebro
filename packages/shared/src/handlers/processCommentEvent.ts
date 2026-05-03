@@ -107,17 +107,20 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
     } as never);
     if (responseRow === null) continue;
 
-    // Render content. AI variants are deferred to spec 008 — for v1
-    // we use the static template; if mode='ai', we use fallbackTemplate
-    // as a placeholder until spec 008 wires OpenAI.
+    // Render content. For mode='static' we render the template now;
+    // for mode='ai' we store the COMMENT text as placeholder content
+    // (so generate-ai-reply can read it) and the AI handler will
+    // overwrite it with the AI-generated reply before send-dm fires.
+    const isAi = responseRow.mode === 'ai';
     let content: string;
-    if (responseRow.mode === 'static') {
-      content = responseRow.template ?? '';
+    if (isAi) {
+      // Stash the inbound comment for the AI handler to use as input.
+      content = commentText;
     } else {
-      content = responseRow.fallbackTemplate ?? responseRow.template ?? '';
+      content = responseRow.template ?? '';
+      if (content === '') continue;
+      content = renderTemplate(content, { firstName: username, username });
     }
-    if (content === '') continue;
-    content = renderTemplate(content, { firstName: username, username });
 
     // Create a sends row in 'queued' status. The send-dm handler
     // updates it to sent/failed/rateLimited/outsideWindow.
@@ -131,7 +134,7 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
       recipientPsid,
       kind: 'dm',
       content,
-      aiGenerated: responseRow.mode === 'ai',
+      aiGenerated: isAi,
       status: 'queued',
       metaMessageId: null,
       errorCode: null,
@@ -143,14 +146,23 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
     };
     await db.insertOne('sends', send as never);
 
-    await eventsQueue.add('send-dm', {
-      type: 'send-dm',
-      sendId,
-      igAccountId: event.igAccountId,
-      recipientPsid,
-      content,
-      automationId: automation._id,
-    });
+    if (isAi) {
+      await eventsQueue.add('generate-ai-reply', {
+        type: 'generate-ai-reply',
+        eventId: event._id,
+        responseId: responseRow._id,
+        sendId,
+      });
+    } else {
+      await eventsQueue.add('send-dm', {
+        type: 'send-dm',
+        sendId,
+        igAccountId: event.igAccountId,
+        recipientPsid,
+        content,
+        automationId: automation._id,
+      });
+    }
     result.enqueued += 1;
   }
 
