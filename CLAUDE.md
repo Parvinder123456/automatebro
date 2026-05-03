@@ -1096,3 +1096,18 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-03 — Postgres CHECK constraints on enum-like columns (`status IN ('queued','sent', ...)`) catch typos at insert time. Worth the 5 lines of SQL — silent data corruption is otherwise the easy failure mode.
 - 2026-05-03 — `withTransaction` for multi-row creates: `createAutomation` inserts 3 rows (automations + triggers + responses). If any fails, none persist. Without it, a partial automation breaks listAutomations later (orphan rows).
 
+### Spec 008 lessons (2026-05-03)
+
+- 2026-05-03 — OpenAI gpt-4o-mini pricing as of 2026: $0.15/1M input + $0.60/1M output. Convert to paise via `INR_PER_USD = 84` cached constant (close enough for cost tracking — exact rate matters when settling, not estimating). Hard-code in `adapters/openai.ts` and update at each spec.
+- 2026-05-03 — When AI is optional (key not yet provisioned), the handler must gracefully degrade to fallback template instead of throwing. Pattern: `if (apiKey === undefined || apiKey === '') { use fallback; enqueue send-dm; return 'no-key-fallback' }`. BullMQ retries throws — degrade-to-fallback is the right model when the failure is "configuration not yet complete."
+- 2026-05-03 — Moderation API outage is non-fatal — log + proceed with the AI output. Reasoning: a moderation outage shouldn't block all AI replies; the chatCompletion model has built-in safety training as the secondary line of defence.
+- 2026-05-03 — Lazy-create + race-tolerate the `aiUsage` row: try `insertOne`; on unique-violation, re-read. Two concurrent jobs for the same tenant in the same month can race; the second insert fails on UNIQUE(tenantId, month) and we just use the existing row.
+- 2026-05-03 — For optional env vars referenced by handlers: declare in Zod as `.optional()`, then check `apiKey === undefined || apiKey === ''` in the handler — the empty string and undefined arise from different paths (`.env` empty assignment vs. unset). Both must be handled.
+
+### Spec 009 lessons (2026-05-03)
+
+- 2026-05-03 — RFC 4180 CSV escaping is 4 lines: if the cell contains `"`, `,`, `\n`, or `\r`, wrap in `"…"` and double any embedded `"`. No need for a CSV library for ≤10 columns.
+- 2026-05-03 — Set `Content-Disposition: attachment; filename="leads-YYYY-MM-DD.csv"` so browsers download instead of trying to render. Pair with `Content-Type: text/csv; charset=utf-8`.
+- 2026-05-03 — `$set` + `$setOnInsert` upsert pattern for "first seen / last seen" columns: `$set: { lastSeenAt }` (always overwritten), `$setOnInsert: { firstSeenAt, _id, identity-fields }` (write-once). The unique index on `(tenantId, igAccountId, igUserId)` enforces single-row-per-end-user.
+- 2026-05-03 — Phone normalisation: strip non-digits, preserve `+` prefix, validate 10–15 digits total (covers India + international). Indian-friendly regex `(?:\+?\d{1,3}[\s-]?)?(?:\d[\s-]?){9,14}\d` matches a wider net than RFC 3966; tighten if false-positive rate is high.
+
