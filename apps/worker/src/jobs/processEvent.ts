@@ -1,4 +1,5 @@
 import { getDb } from '@automatebro/shared/db/client';
+import { captureLead } from '@automatebro/shared/handlers/captureLead';
 import { processCommentEvent } from '@automatebro/shared/handlers/processCommentEvent';
 import { logger } from '@automatebro/shared/logger';
 import type { ProcessEventJobType } from '@automatebro/shared/queue/jobTypes';
@@ -7,7 +8,7 @@ import type { EventRecord } from '@automatebro/shared/types/tenant';
  * Spec 006 — process a webhook event.
  * Spec 007 — branches on event.kind:
  *   - 'comment' → processCommentEvent (keyword match + enqueue send-dm)
- *   - 'message' → spec 009 will enqueue capture-lead
+ *   - 'message' → captureLead (spec 009: extract email/phone from DM)
  *   - 'storyReply' → spec 011 (story-reply automations are post-launch)
  *   - 'messageReaction' / 'mention' → no-op for v1
  */
@@ -42,7 +43,11 @@ export async function processEvent(data: ProcessEventJobType, job: Job): Promise
       );
       break;
     }
-    case 'message':
+    case 'message': {
+      const captured = await captureLead(event);
+      logger.info({ jobId: job.id, eventId: event._id, ...captured }, 'captureLead: completed');
+      break;
+    }
     case 'storyReply':
     case 'messageReaction':
     case 'mention':

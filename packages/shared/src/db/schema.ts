@@ -51,6 +51,20 @@ export const EventSchema = z.object({
   processedAt: z.date().nullable().optional(),
 });
 
+export const LeadSchema = z.object({
+  _id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  igAccountId: z.string().uuid(),
+  igUserId: z.string().min(1),
+  igUsername: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  firstSeenAt: z.date(),
+  lastSeenAt: z.date(),
+  tags: z.array(z.string()),
+  attributedAutomationId: z.string().uuid().nullable().optional(),
+});
+
 export const AiUsageSchema = z.object({
   _id: z.string().uuid(),
   tenantId: z.string().uuid(),
@@ -198,6 +212,14 @@ export function registerSchemas(db: StrictDB): void {
     name: 'aiUsage',
     schema: AiUsageSchema,
     indexes: [{ collection: 'aiUsage', fields: { tenantId: 1, month: 1 }, unique: true }],
+  });
+  db.registerCollection({
+    name: 'leads',
+    schema: LeadSchema,
+    indexes: [
+      { collection: 'leads', fields: { tenantId: 1, igAccountId: 1, igUserId: 1 }, unique: true },
+      { collection: 'leads', fields: { tenantId: 1, lastSeenAt: -1 } },
+    ],
   });
 }
 

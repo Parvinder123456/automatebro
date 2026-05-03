@@ -12,6 +12,7 @@ import type {
   AutomationSchema,
   EventSchema,
   IgAccountSchema,
+  LeadSchema,
   ResponseSchema,
   SendSchema,
   TenantSchema,
@@ -32,3 +33,4 @@ export type Trigger = z.infer<typeof TriggerSchema>;
 export type ResponseRecord = z.infer<typeof ResponseSchema>;
 export type Send = z.infer<typeof SendSchema>;
 export type AiUsage = z.infer<typeof AiUsageSchema>;
+export type Lead = z.infer<typeof LeadSchema>;

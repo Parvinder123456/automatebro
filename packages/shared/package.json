@@ -34,7 +34,9 @@
     "./meta/rateLimit": "./src/meta/rateLimit.ts",
     "./meta/messageWindow": "./src/meta/messageWindow.ts",
     "./adapters/openai": "./src/adapters/openai.ts",
-    "./handlers/generateAiReply": "./src/handlers/generateAiReply.ts"
+    "./handlers/generateAiReply": "./src/handlers/generateAiReply.ts",
+    "./handlers/captureLead": "./src/handlers/captureLead.ts",
+    "./handlers/leads/listLeads": "./src/handlers/leads/listLeads.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
