@@ -25,14 +25,6 @@ describe('JobData discriminator', () => {
     expect(parsed.type).toBe('send-dm');
   });
 
-  it('parses capture-lead variant', () => {
-    const parsed = JobData.parse({
-      type: 'capture-lead',
-      eventId: '11111111-1111-4111-8111-111111111111',
-    });
-    expect(parsed.type).toBe('capture-lead');
-  });
-
   it('parses generate-ai-reply variant', () => {
     const parsed = JobData.parse({
       type: 'generate-ai-reply',

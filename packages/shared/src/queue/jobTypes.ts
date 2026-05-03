@@ -8,8 +8,11 @@
  * v1 implementations:
  *   - process-event: implemented in spec 006 (this spec)
  *   - send-dm: stub in spec 006, real in spec 007
- *   - capture-lead: stub in spec 006, real in spec 009
  *   - generate-ai-reply: stub in spec 006, real in spec 008
+ *
+ * Spec 009 note: lead capture is handled inline inside processEvent
+ * (branch on event.kind === 'message') rather than as a separate
+ * job type. See docs/specs/009-lead-capture.md §3.1.
  */
 import { z } from 'zod';
 
@@ -27,11 +30,6 @@ export const SendDMJob = z.object({
   automationId: z.string().uuid().nullable(),
 });
 
-export const CaptureLeadJob = z.object({
-  type: z.literal('capture-lead'),
-  eventId: z.string().uuid(),
-});
-
 export const GenerateAiReplyJob = z.object({
   type: z.literal('generate-ai-reply'),
   eventId: z.string().uuid(),
@@ -44,14 +42,12 @@ export const GenerateAiReplyJob = z.object({
 export const JobData = z.discriminatedUnion('type', [
   ProcessEventJob,
   SendDMJob,
-  CaptureLeadJob,
   GenerateAiReplyJob,
 ]);
 
 export type JobData = z.infer<typeof JobData>;
 export type ProcessEventJobType = z.infer<typeof ProcessEventJob>;
 export type SendDMJobType = z.infer<typeof SendDMJob>;
-export type CaptureLeadJobType = z.infer<typeof CaptureLeadJob>;
 export type GenerateAiReplyJobType = z.infer<typeof GenerateAiReplyJob>;
 
 /**

@@ -120,7 +120,8 @@ flowchart LR
    for parity with the starter kit, but Vercel runs them as one unit.
 2. **Worker on Railway** — single Node process running BullMQ consumer for
    one queue called `events`. Discriminated-union job payloads (`type:
-   'process-comment' | 'send-dm' | 'capture-lead' | 'generate-ai-reply'`).
+   'process-event' | 'send-dm' | 'generate-ai-reply'`). Lead capture is
+   inline inside `process-event` (spec 009 §3.1).
 3. **Postgres on Supabase, Redis on Upstash** — shared by both deployable
    units, accessed only via StrictDB / BullMQ respectively.
 
@@ -417,9 +418,15 @@ Indexes: unique on `(tenantId, month)`.
 ### Flow D — Lead capture inside DM
 1. Tenant configures an automation with a DM template asking for email.
 2. End user replies with email in DM.
-3. Webhook → events → enqueue `{ type: 'capture-lead', eventId }`.
-4. Worker parses with strict regex (RFC 5322 simplified). If no match: no-op.
-5. `db.updateOne('leads', { tenantId, igAccountId, igUserId },
+3. Webhook → events → enqueue `{ type: 'process-event', eventId }`.
+4. Worker's `processEvent` loads the event and branches on `event.kind`.
+   For `kind === 'message'` it calls `captureLead(event)` inline — no
+   second queue hop. (Spec 009 §3.1 — the original plan had a separate
+   `capture-lead` job; consolidating saves one Redis round-trip and one
+   DB read per inbound DM.)
+5. Worker parses with strict regex (RFC 5322 simplified for email,
+   digit-permissive for phone). If no match: no-op.
+6. `db.updateOne('leads', { tenantId, igAccountId, igUserId },
    { $set: { email, lastSeenAt }, $setOnInsert: { firstSeenAt,
    attributedAutomationId } }, true)`. Upsert keeps it idempotent.
 
@@ -894,9 +901,8 @@ automatebro/
 │       ├── src/
 │       │   ├── index.ts             # bootstrap, BullMQ Worker, graceful shutdown
 │       │   └── jobs/
-│       │       ├── processComment.ts
+│       │       ├── processEvent.ts          # dispatcher; comment → processCommentEvent, message → captureLead inline
 │       │       ├── sendDM.ts
-│       │       ├── captureLead.ts
 │       │       └── generateAiReply.ts
 │       └── package.json
 ├── packages/
@@ -972,7 +978,8 @@ Each one a separate MDD spec, approved before code:
    processComment + sendDM jobs (static templates only).
 8. `008-ai-replies.md` — generateAiReply job, aiUsage cap, moderation,
    fallback template.
-9. `009-lead-capture.md` — captureLead job, leads upsert, CSV export.
+9. `009-lead-capture.md` — captureLead inline handler (inside processEvent),
+   leads upsert, CSV export.
 10. `010-razorpay-billing.md` — checkout, subscription webhook, plan
     enforcement.
 11. `011-dashboard-ui.md` — automation builder UI, send history,

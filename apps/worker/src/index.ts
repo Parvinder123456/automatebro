@@ -20,7 +20,6 @@ import { closeQueue, connection } from '@automatebro/shared/queue/queues';
  *  - Shut down cleanly on SIGINT / SIGTERM and on uncaughtException.
  */
 import { type Job, Worker } from 'bullmq';
-import { captureLead } from './jobs/captureLead.js';
 import { generateAiReply } from './jobs/generateAiReply.js';
 import { processEvent } from './jobs/processEvent.js';
 import { sendDM } from './jobs/sendDM.js';
@@ -47,8 +46,6 @@ async function dispatchJob(job: Job): Promise<void> {
       return processEvent(data, job);
     case 'send-dm':
       return sendDM(data, job);
-    case 'capture-lead':
-      return captureLead(data, job);
     case 'generate-ai-reply':
       return generateAiReply(data, job);
   }

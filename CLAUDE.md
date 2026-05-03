@@ -911,7 +911,7 @@ introduce new dependencies.
 | Website | 3000 | 4000 | Marketing site, /pricing, /compare/* SEO pages |
 | API | 3001 | 4010 | `/api/v1/webhooks/meta`, `/api/v1/automations/*`, all backend routes |
 | Dashboard | 3002 | 4020 | Logged-in tenant dashboard UI |
-| Worker | (no port — process) | n/a | BullMQ consumers for `process-comment`, `send-dm`, `capture-lead` |
+| Worker | (no port — process) | n/a | BullMQ consumers for `process-event`, `send-dm`, `generate-ai-reply` (lead capture is inline in `process-event` — see spec 009 §3.1) |
 
 Webhook URL exposed by Meta points at the **API service** (3001), NOT website.
 
@@ -957,9 +957,9 @@ src/
 ├── worker/                      # NEW — Railway entry point
 │   ├── index.ts                 # Worker bootstrap; graceful shutdown
 │   └── jobs/
-│       ├── processComment.ts
+│       ├── processEvent.ts        # dispatcher; handles message → captureLead inline
 │       ├── sendDM.ts
-│       └── captureLead.ts
+│       └── generateAiReply.ts
 ├── queue/                       # NEW — BullMQ setup
 │   ├── queues.ts                # Queue definitions, connection, rate limiter
 │   └── jobTypes.ts              # Discriminated unions for every job payload
