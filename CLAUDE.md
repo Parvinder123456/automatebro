@@ -1111,3 +1111,12 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-03 — `$set` + `$setOnInsert` upsert pattern for "first seen / last seen" columns: `$set: { lastSeenAt }` (always overwritten), `$setOnInsert: { firstSeenAt, _id, identity-fields }` (write-once). The unique index on `(tenantId, igAccountId, igUserId)` enforces single-row-per-end-user.
 - 2026-05-03 — Phone normalisation: strip non-digits, preserve `+` prefix, validate 10–15 digits total (covers India + international). Indian-friendly regex `(?:\+?\d{1,3}[\s-]?)?(?:\d[\s-]?){9,14}\d` matches a wider net than RFC 3966; tighten if false-positive rate is high.
 
+### Spec 011 lessons (2026-05-03)
+
+- 2026-05-03 — `React.cache()` on `getCtx()` is essential when layout + page both call it. Without it, every Server Component that calls `getCtx()` fires a separate `supabase.auth.getUser()` round-trip. Wrap once: `export const getCtx = cache(async () => { … })`.
+- 2026-05-03 — `exactOptionalPropertyTypes: true` rejects `{ current?: string }` when passing `string | undefined`. Declare the prop as `{ current?: string | undefined }` explicitly so the union is spelled out.
+- 2026-05-03 — Client Component mutation buttons (pause/delete) need the same double-click guard as forms: a `useRef(false)` checked synchronously at the top of the handler. `useState` alone is async and doesn't prevent rapid clicks.
+- 2026-05-03 — `encodeURIComponent(id)` in fetch URLs for PATCH/DELETE — UUIDs are safe today, but the defensive pattern costs nothing and prevents injection if the id format changes.
+- 2026-05-03 — Hydration sentinel pattern for forms: `data-hydrated` set via `useEffect(() => setHydrated(true), [])`, submit button disabled until hydrated, and E2E tests `await expect(form).toHaveAttribute('data-hydrated', 'true')` before fill+click. This prevents Playwright clicking before React hydrates (which causes native HTML form submission).
+- 2026-05-03 — Server Components reading `searchParams` in Next.js 15 App Router receive them as a `Promise` — must `await searchParams` before accessing properties. This changed from Next 14 where it was synchronous.
+
