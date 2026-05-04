@@ -118,8 +118,7 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
       content = commentText;
     } else {
       content = responseRow.template ?? '';
-      if (content === '') continue;
-      content = renderTemplate(content, { firstName: username, username });
+      content = content !== '' ? renderTemplate(content, { firstName: username, username }) : '';
     }
 
     // ---- DM send ----
