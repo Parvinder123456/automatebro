@@ -19,6 +19,8 @@ import type { ReactNode } from 'react';
 import { Sidebar } from '../../components/app-shell/sidebar';
 import { getCtx } from '../../lib/auth/get-ctx';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const ctx = await getCtx();
   if (ctx === null) {
