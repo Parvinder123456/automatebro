@@ -22,6 +22,7 @@ const VALID_INFRA = {
   // Spec 004 additions: META_TOKEN_KEY must decode to 32 bytes.
   META_APP_ID: '1234567890',
   META_APP_SECRET: 'cccccccccccccccc1111111111111111',
+  META_IG_APP_SECRET: 'dddddddddddddddd2222222222222222',
   META_TOKEN_KEY: Buffer.alloc(32, 1).toString('base64'),
   // Spec 005 addition: webhook verify token (≥16 chars).
   META_WEBHOOK_VERIFY_TOKEN: '0123456789abcdef0123456789abcdef',

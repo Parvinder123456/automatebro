@@ -39,16 +39,26 @@ export const GenerateAiReplyJob = z.object({
   sendId: z.string().uuid(),
 });
 
+export const SendCommentReplyJob = z.object({
+  type: z.literal('send-comment-reply'),
+  sendId: z.string().uuid(),
+  igAccountId: z.string().uuid(),
+  commentId: z.string().min(1),
+  message: z.string().min(1),
+});
+
 export const JobData = z.discriminatedUnion('type', [
   ProcessEventJob,
   SendDMJob,
   GenerateAiReplyJob,
+  SendCommentReplyJob,
 ]);
 
 export type JobData = z.infer<typeof JobData>;
 export type ProcessEventJobType = z.infer<typeof ProcessEventJob>;
 export type SendDMJobType = z.infer<typeof SendDMJob>;
 export type GenerateAiReplyJobType = z.infer<typeof GenerateAiReplyJob>;
+export type SendCommentReplyJobType = z.infer<typeof SendCommentReplyJob>;
 
 /**
  * Per-IG-account rate limit (Meta's effective ceiling is ~200 DMs/hour;

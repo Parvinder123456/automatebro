@@ -122,48 +122,88 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
       content = renderTemplate(content, { firstName: username, username });
     }
 
-    // Create a sends row in 'queued' status. The send-dm handler
-    // updates it to sent/failed/rateLimited/outsideWindow.
-    const sendId = randomUUID();
-    const send: Send = {
-      _id: sendId,
-      tenantId: event.tenantId,
-      igAccountId: event.igAccountId,
-      automationId: automation._id,
-      eventId: event._id,
-      recipientPsid,
-      kind: 'dm',
-      content,
-      aiGenerated: isAi,
-      status: 'queued',
-      metaMessageId: null,
-      errorCode: null,
-      errorMessage: null,
-      attempt: 1,
-      queuedAt: new Date(),
-      sentAt: null,
-      failedAt: null,
-    };
-    await db.insertOne('sends', send as never);
-
-    if (isAi) {
-      await eventsQueue.add('generate-ai-reply', {
-        type: 'generate-ai-reply',
-        eventId: event._id,
-        responseId: responseRow._id,
-        sendId,
-      });
-    } else {
-      await eventsQueue.add('send-dm', {
-        type: 'send-dm',
-        sendId,
+    // ---- DM send ----
+    if (content !== '' || isAi) {
+      // Create a sends row in 'queued' status. The send-dm handler
+      // updates it to sent/failed/rateLimited/outsideWindow.
+      const sendId = randomUUID();
+      const send: Send = {
+        _id: sendId,
+        tenantId: event.tenantId,
         igAccountId: event.igAccountId,
-        recipientPsid,
-        content,
         automationId: automation._id,
-      });
+        eventId: event._id,
+        recipientPsid,
+        kind: 'dm',
+        content,
+        aiGenerated: isAi,
+        status: 'queued',
+        metaMessageId: null,
+        errorCode: null,
+        errorMessage: null,
+        attempt: 1,
+        queuedAt: new Date(),
+        sentAt: null,
+        failedAt: null,
+      };
+      await db.insertOne('sends', send as never);
+
+      if (isAi) {
+        await eventsQueue.add('generate-ai-reply', {
+          type: 'generate-ai-reply',
+          eventId: event._id,
+          responseId: responseRow._id,
+          sendId,
+        });
+      } else {
+        await eventsQueue.add('send-dm', {
+          type: 'send-dm',
+          sendId,
+          igAccountId: event.igAccountId,
+          recipientPsid,
+          content,
+          automationId: automation._id,
+        });
+      }
+      result.enqueued += 1;
     }
-    result.enqueued += 1;
+
+    // ---- Comment reply ----
+    const commentReplyText = responseRow.commentReply ?? null;
+    const commentId = payload?.change?.value?.id ?? null;
+    if (commentReplyText !== null && commentReplyText !== '' && commentId !== null) {
+      const renderedReply = renderTemplate(commentReplyText, { firstName: username, username });
+      const replySendId = randomUUID();
+      const replySend: Send = {
+        _id: replySendId,
+        tenantId: event.tenantId,
+        igAccountId: event.igAccountId,
+        automationId: automation._id,
+        eventId: event._id,
+        recipientPsid,
+        kind: 'commentReply',
+        content: renderedReply,
+        aiGenerated: false,
+        status: 'queued',
+        metaMessageId: null,
+        errorCode: null,
+        errorMessage: null,
+        attempt: 1,
+        queuedAt: new Date(),
+        sentAt: null,
+        failedAt: null,
+      };
+      await db.insertOne('sends', replySend as never);
+
+      await eventsQueue.add('send-comment-reply', {
+        type: 'send-comment-reply',
+        sendId: replySendId,
+        igAccountId: event.igAccountId,
+        commentId,
+        message: renderedReply,
+      });
+      result.enqueued += 1;
+    }
   }
 
   return result;

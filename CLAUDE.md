@@ -1120,3 +1120,18 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-03 — Hydration sentinel pattern for forms: `data-hydrated` set via `useEffect(() => setHydrated(true), [])`, submit button disabled until hydrated, and E2E tests `await expect(form).toHaveAttribute('data-hydrated', 'true')` before fill+click. This prevents Playwright clicking before React hydrates (which causes native HTML form submission).
 - 2026-05-03 — Server Components reading `searchParams` in Next.js 15 App Router receive them as a `Promise` — must `await searchParams` before accessing properties. This changed from Next 14 where it was synchronous.
 
+### Meta integration lessons (2026-05-04)
+
+**Dual secrets**
+- 2026-05-04 — Instagram Login API uses TWO different secrets: the **Facebook App Secret** (`META_APP_SECRET`) for OAuth token exchange / state HMAC, and the **Instagram App Secret** (`META_IG_APP_SECRET`) for webhook HMAC-SHA256 signature verification. These are different values from different places in the Meta Dashboard. Never conflate them.
+
+**Webhook subscriptions**
+- 2026-05-04 — `subscribePageToWebhooks()` calls `POST /{pageId}/subscribed_apps` — this is the Facebook Pages API. For Instagram Business Login webhooks, subscription is configured **in the Meta Dashboard under the Instagram product**, not via API. The API call may silently fail or do nothing.
+- 2026-05-04 — Meta Dashboard has a **general Webhooks page** and a **per-product webhook config** (under Instagram product). Only the per-product config delivers real Instagram events. The general Webhooks page only sends canned test payloads (`entry.id = "0"`, `username = "test"`).
+- 2026-05-04 — In Development mode, Meta only sends test payloads (fake data) — never real Instagram events. The app must be in **Live mode** to receive real comment/message webhooks. The "To receive webhooks, app mode should be set to Live" info banner in the Instagram product settings confirms this.
+- 2026-05-04 — `WEBHOOK_FIELDS` that include permissions without Advanced Access (e.g. `messages` needing `instagram_manage_messages`) cause the entire `subscribePageToWebhooks()` call to fail. Subscribe only to fields you have permission for (e.g. just `['comments']` initially).
+
+**Deployment**
+- 2026-05-04 — `@automatebro/shared` exports raw `.ts` files (no build step). The worker cannot use compiled JS (`tsc` output) because `import '@automatebro/shared/env'` resolves to `.ts` source. Use `tsx` (or `ts-node`) on Railway instead of raw `node`. Move `tsx` from devDependencies to dependencies so it's available in production.
+- 2026-05-04 — Vercel + Railway both deploy directly from git — no Docker needed. Vercel handles Next.js natively, Railway runs Node.js with Nixpacks. Skip Dockerfile unless deploying to container-only platforms (ECS, Cloud Run).
+

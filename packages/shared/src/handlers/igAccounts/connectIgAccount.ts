@@ -44,7 +44,7 @@ export interface ConnectedAccount {
   webhookSubscribed: boolean;
 }
 
-const WEBHOOK_FIELDS = ['comments', 'messages', 'message_reactions', 'mentions'];
+const WEBHOOK_FIELDS = ['comments'];
 const REQUIRED_SCOPES = [
   'instagram_basic',
   'instagram_manage_messages',

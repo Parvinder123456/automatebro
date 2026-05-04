@@ -23,6 +23,7 @@ import { type Job, Worker } from 'bullmq';
 import { generateAiReply } from './jobs/generateAiReply.js';
 import { processEvent } from './jobs/processEvent.js';
 import { sendDM } from './jobs/sendDM.js';
+import { sendCommentReply } from './jobs/sendCommentReply.js';
 
 const HEARTBEAT_KEY = 'worker:heartbeat';
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -48,6 +49,8 @@ async function dispatchJob(job: Job): Promise<void> {
       return sendDM(data, job);
     case 'generate-ai-reply':
       return generateAiReply(data, job);
+    case 'send-comment-reply':
+      return sendCommentReply(data, job);
   }
 }
 

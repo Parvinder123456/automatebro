@@ -1,4 +1,15 @@
 import type { NextConfig } from 'next';
+import { resolve } from 'node:path';
+
+// Load root .env into process.env using Node.js 20.12+ built-in.
+// Next.js runs next.config.ts in Node context before its own env loader,
+// so vars set here are in place for all server routes and are inlined
+// into NEXT_PUBLIC_* slots for Edge Runtime / client bundles.
+try {
+  process.loadEnvFile(resolve(import.meta.dirname, '..', '..', '.env'));
+} catch {
+  // No .env file — CI injects env vars directly; this is expected.
+}
 
 const config: NextConfig = {
   reactStrictMode: true,

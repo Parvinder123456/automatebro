@@ -202,6 +202,25 @@ export async function subscribePageToWebhooks(args: {
 }
 
 /**
+ * Reply to an Instagram comment. Uses the Graph API endpoint
+ * POST /{comment-id}/replies with the page access token.
+ * Returns the new comment's ID.
+ */
+export async function replyToComment(args: {
+  commentId: string;
+  message: string;
+  accessToken: string;
+}): Promise<{ commentId: string }> {
+  const url = new URL(`${GRAPH_API_BASE}/${args.commentId}/replies`);
+  url.searchParams.set('message', args.message);
+  url.searchParams.set('access_token', args.accessToken);
+  const body = (await metaFetch(url.toString(), { method: 'POST' })) as {
+    id?: string;
+  };
+  return { commentId: body.id ?? '' };
+}
+
+/**
  * Build the OAuth authorization URL the browser should be redirected
  * to. Caller appends `state` and `redirect_uri`.
  */

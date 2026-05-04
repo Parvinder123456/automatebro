@@ -52,6 +52,9 @@ _ai_temp/
 # MDD working directory (docs, audit notes, reports)
 .mdd/
 
+# Binaries
+*.exe
+
 # Misc
 *.bak
 *.tmp

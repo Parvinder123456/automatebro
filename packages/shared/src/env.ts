@@ -38,6 +38,8 @@ export const Env = z
     // Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
     META_APP_ID: z.string().regex(/^\d+$/, 'META_APP_ID must be numeric'),
     META_APP_SECRET: z.string().min(16),
+    // Instagram App Secret — Meta signs webhooks with this (different from Facebook App Secret).
+    META_IG_APP_SECRET: z.string().min(16),
     META_TOKEN_KEY: z
       .string()
       .min(1)

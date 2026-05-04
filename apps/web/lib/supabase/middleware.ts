@@ -1,4 +1,4 @@
-import { loadEnv } from '@automatebro/shared/env';
+import { PublicEnv } from '@automatebro/shared/env';
 /**
  * Supabase client for Next.js middleware. Refreshes the access token
  * if it's near expiry, then propagates any updated cookies to the
@@ -30,11 +30,9 @@ export async function refreshSession(request: NextRequest): Promise<SessionRefre
   forwardedHeaders.set('x-pathname', request.nextUrl.pathname);
 
   let response = NextResponse.next({ request: { headers: forwardedHeaders } });
-  const env = loadEnv();
-
   const supabase = createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    PublicEnv.SUPABASE_URL,
+    PublicEnv.SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {

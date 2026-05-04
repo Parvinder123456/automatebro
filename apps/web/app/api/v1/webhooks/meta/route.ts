@@ -61,7 +61,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const verification = verifyMetaSignature({
     rawBody,
     signatureHeader: request.headers.get('x-hub-signature-256'),
-    appSecret: env.META_APP_SECRET,
+    appSecret: env.META_IG_APP_SECRET,
   });
   if (!verification.ok) {
     logger.warn(

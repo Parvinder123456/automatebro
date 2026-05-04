@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "node --env-file=../../.env node_modules/tsx/dist/cli.mjs src/index.ts",
     "build": "tsc",
     "start": "node --enable-source-maps dist/index.js",
     "typecheck": "tsc --noEmit"
@@ -13,9 +13,7 @@
     "@automatebro/shared": "workspace:*",
     "bullmq": "^5.21.0",
     "ioredis": "^5.4.1",
-    "pino": "^9.4.0"
-  },
-  "devDependencies": {
+    "pino": "^9.4.0",
     "tsx": "^4.19.0"
   }
 }
