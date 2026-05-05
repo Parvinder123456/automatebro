@@ -46,6 +46,26 @@ export function RowActions({
     }
   }
 
+  // Spec 023 / Phase 4.6 — duplicate the automation. Server-side
+  // clone clones trigger + response and starts the clone as 'paused'.
+  async function handleDuplicate() {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      const res = await fetch(`/api/v1/automations/${encodeURIComponent(automationId)}/duplicate`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const body = (await res.json().catch(() => ({}))) as { message?: string };
+        window.alert(`Could not duplicate: ${body.message ?? `HTTP ${res.status}`}`);
+      }
+    } finally {
+      busyRef.current = false;
+    }
+  }
+
   return (
     <>
       <span className="flex gap-2">
@@ -59,6 +79,14 @@ export function RowActions({
         </button>
         <button type="button" onClick={toggleStatus} className="text-xs underline">
           {status === 'active' ? 'Pause' : 'Resume'}
+        </button>
+        <button
+          type="button"
+          onClick={handleDuplicate}
+          className="text-xs underline"
+          data-testid={`duplicate-button-${automationId}`}
+        >
+          Duplicate
         </button>
         <button type="button" onClick={handleDelete} className="text-xs text-red-600 underline">
           Delete
