@@ -1,6 +1,7 @@
 import { getDb } from '@automatebro/shared/db/client';
 import { captureLead } from '@automatebro/shared/handlers/captureLead';
 import { processCommentEvent } from '@automatebro/shared/handlers/processCommentEvent';
+import { processDmEvent } from '@automatebro/shared/handlers/processDmEvent';
 import { logger } from '@automatebro/shared/logger';
 import type { ProcessEventJobType } from '@automatebro/shared/queue/jobTypes';
 import type { EventRecord } from '@automatebro/shared/types/tenant';
@@ -8,8 +9,8 @@ import type { EventRecord } from '@automatebro/shared/types/tenant';
  * Spec 006 — process a webhook event.
  * Spec 007 — branches on event.kind:
  *   - 'comment' → processCommentEvent (keyword match + enqueue send-dm)
- *   - 'message' → captureLead (spec 009: extract email/phone from DM)
- *   - 'storyReply' → spec 011 (story-reply automations are post-launch)
+ *   - 'message' → captureLead (spec 009) AND processDmEvent (spec 015) in parallel
+ *   - 'storyReply' → spec 017 — handler pending Meta App Review for instagram_manage_messages
  *   - 'messageReaction' / 'mention' → no-op for v1
  */
 import type { Job } from 'bullmq';
@@ -44,8 +45,21 @@ export async function processEvent(data: ProcessEventJobType, job: Job): Promise
       break;
     }
     case 'message': {
-      const captured = await captureLead(event);
+      // Spec 015 — fan out captureLead (spec 009) + processDmEvent in
+      // parallel. They write to disjoint tables (leads vs sends +
+      // automations) and are genuinely independent. CLAUDE.md Critical
+      // Rule #8: independent awaits parallelise via Promise.all.
+      //
+      // If either throws, BullMQ retries the whole job. captureLead's
+      // upsert is idempotent on (tenantId, igAccountId, igUserId), and
+      // processDmEvent inserts a fresh `sends` row with a new uuid each
+      // time — duplicate sends in the queue would re-enqueue against
+      // the same eventId. To prevent that on retry, processDmEvent
+      // dedupes by checking `sends WHERE eventId = ?` before inserting
+      // (defence-in-depth alongside BullMQ's at-least-once semantics).
+      const [captured, processed] = await Promise.all([captureLead(event), processDmEvent(event)]);
       logger.info({ jobId: job.id, eventId: event._id, ...captured }, 'captureLead: completed');
+      logger.info({ jobId: job.id, eventId: event._id, ...processed }, 'processDmEvent: completed');
       break;
     }
     case 'storyReply':

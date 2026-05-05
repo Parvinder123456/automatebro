@@ -193,4 +193,67 @@ test.describe('automations CRUD (integration)', () => {
       await c.query('DELETE FROM public."tenants" WHERE "_id" = $1', [otherTenantSetup.tenantId]);
     }).catch(() => undefined);
   });
+
+  test('A3: DM-trigger automation is creatable via /api/v1/automations (spec 015)', async ({
+    page,
+  }) => {
+    if (!user || !igAccountId) throw new Error('setup');
+
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+    await page.getByLabel('Email').fill(user.email);
+    await page.getByLabel('Password').fill(user.password);
+    await page.getByTestId('login-submit').click();
+    await page.waitForURL(/\/app\/dashboard$/, {
+      timeout: 30_000,
+      waitUntil: 'domcontentloaded',
+    });
+
+    // CREATE with trigger='dm'
+    const create = await page.request.post('/api/v1/automations', {
+      data: {
+        igAccountId,
+        name: 'DM Auto Reply',
+        trigger: 'dm',
+        keywords: ['help', 'support'],
+        matchMode: 'contains',
+        response: { mode: 'static', template: 'Hi! How can I help?' },
+      },
+    });
+    expect(create.status()).toBe(201);
+    const created = await create.json();
+    expect(created.automation.trigger).toBe('dm');
+    expect(created.trigger.keywords).toEqual(['help', 'support']);
+
+    // LIST surfaces the trigger value
+    const list = await page.request.get('/api/v1/automations');
+    expect(list.status()).toBe(200);
+    const listBody = await list.json();
+    expect(listBody.automations).toHaveLength(1);
+    expect(listBody.automations[0].automation.trigger).toBe('dm');
+  });
+
+  test('A4: form renders the DM trigger option (spec 015 UI)', async ({ page }) => {
+    if (!user) throw new Error('setup');
+
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+    await page.getByLabel('Email').fill(user.email);
+    await page.getByLabel('Password').fill(user.password);
+    await page.getByTestId('login-submit').click();
+    await page.waitForURL(/\/app\/dashboard$/, {
+      timeout: 30_000,
+      waitUntil: 'domcontentloaded',
+    });
+
+    await page.goto('/app/automations/new');
+    await expect(page.getByTestId('automation-form')).toHaveAttribute('data-hydrated', 'true');
+    await expect(page.getByTestId('trigger-selector')).toBeVisible();
+    await expect(page.getByTestId('trigger-option-comment')).toBeVisible();
+    await expect(page.getByTestId('trigger-option-dm')).toBeVisible();
+
+    // Selecting DM toggles the radio (sanity — confirms client state is wired).
+    await page.getByTestId('trigger-option-dm').check();
+    await expect(page.getByTestId('trigger-option-dm')).toBeChecked();
+  });
 });

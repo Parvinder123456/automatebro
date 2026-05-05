@@ -19,6 +19,7 @@
 | `pnpm build` | Type-check + compile TypeScript |
 | `pnpm start` | Run compiled production build |
 | `pnpm typecheck` | TypeScript type-check only (no emit) |
+| `pnpm smoke` | **Pre-commit gate**: typecheck + lint + test:unit + next build (mandatory before declaring a spec done — see DoD §12.8) |
 | **Testing** | |
 | `pnpm test` | Run ALL tests (unit + E2E) |
 | `pnpm test:unit` | Run unit/integration tests (Vitest) |
@@ -465,6 +466,94 @@ docker_test_before_push = false
 ```
 
 This gate applies globally — every command or workflow that pushes to Docker Hub must respect it.
+
+### 12. Definition of Done (DoD) — Every Feature Spec
+
+A spec is **not done** until every item below is true. Run through the list mentally before declaring "ready to commit"; the bugs we shipped over the first 13 specs trace back to skipping one of these.
+
+#### 12.1 Schema / data layer
+
+- [ ] **Zod schema** updated in `packages/shared/src/db/schema.ts` (and inferred type in `packages/shared/src/types/tenant.ts` flows automatically)
+- [ ] **SQL migration** added at `scripts/migrations/NNN-<slug>.sql` with quoted camelCase identifiers (`"tenantId"`, etc.)
+- [ ] Migration uses `IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` so re-runs are safe
+- [ ] **CHECK constraints** updated for any new enum value (`ALTER TABLE … DROP CONSTRAINT … ADD CONSTRAINT …`)
+- [ ] **Indexes** declared in `registerSchemas()` AND created in the migration
+- [ ] If `Ctx` interface changes: **grep `tenantId:.*role:.*email`** to find every constructor and update it. Common locations: `tests/integration/*.test.ts` `ctxFor()` helpers, occasional inline `Ctx` literals in test files.
+
+#### 12.2 Handlers / shared package
+
+- [ ] New handler file written in `packages/shared/src/handlers/<area>/<verb>.ts`
+- [ ] **`packages/shared/package.json` `exports` map** updated with the new subpath (skip this and consumers fail with `Cannot find module '@automatebro/shared/X'` even though the file exists)
+- [ ] Handler accepts `ctx: Ctx` as last parameter, never reads tenantId from request body
+- [ ] Handler uses `repo.*` not `db.*` for tenant-scoped collections
+- [ ] StrictDB dynamic-dispatch boundary cast: `as never` on filter/sort/update specs (documented pattern, not a smell)
+- [ ] Independent awaits parallelised with `Promise.all` (Critical Rule #8)
+
+#### 12.3 API surface
+
+- [ ] Route lives under `/api/v1/...` (Critical Rule #2)
+- [ ] Auth check at the top: `if (ctx === null) return 401` and `if (ctx.tenantId === null) return 400`
+- [ ] Body validated through a Zod schema; specific error message on consent/literal failures
+- [ ] `runtime = 'nodejs'` and `dynamic = 'force-dynamic'` declared for routes that read cookies / DB
+- [ ] If returning a file download: build `new NextResponse(body, { headers })` by hand — `NextResponse.json()` strips `Content-Disposition`
+
+#### 12.4 UI
+
+- [ ] Server Component by default; Client Component only for state / handlers
+- [ ] **`data-hydrated="true"` marker** + `useEffect(() => setHydrated(true), [])` on every form
+- [ ] Submit button `disabled={submitting || !hydrated || <other-gates>}`
+- [ ] **Synchronous double-submit guard** with `useRef(false)` checked at the top of the handler
+- [ ] `data-testid` on every interactive element an E2E test will reach
+- [ ] If adding a form field that's required, **audit every E2E test that submits this form** (form-fill paths) AND every raw-fetch test that bypasses the form
+
+#### 12.5 Tests
+
+- [ ] Unit test for any pure function (Zod schemas, validators, parsers)
+- [ ] Integration test for any handler that touches the DB (gated on `hasInfra`)
+- [ ] Cross-tenant isolation test for any new collection: tenant A does the action, assert tenant B's data is untouched
+- [ ] E2E test for the full happy path with **≥3 assertions** (URL, element visibility, content) per Critical Rule #4
+- [ ] E2E test for the failure path (validation error, missing consent, etc.)
+- [ ] Existing E2E tests that hit the changed surface area still pass (consent-gate audit applies)
+
+#### 12.6 Observability
+
+- [ ] Structured Pino log at INFO on success, ERROR on failure
+- [ ] No tokens / DM contents / unmasked emails in any log line
+- [ ] Sentry tag with `tenantId` on errors
+
+#### 12.7 Documentation
+
+- [ ] `docs/specs/NNN-<slug>.md` written with §1 Goal, §2 Out of scope, §3 Architectural decisions, §4 Files, §5 Tests, §6 Acceptance criteria, §7 Risks
+- [ ] `docs/TODO_BUILD.md` updated — move from "outstanding" to "shipped"
+- [ ] `CLAUDE.md` "Lessons learned" section appended with anything new (immediately, not "later")
+
+#### 12.8 Smoke gate (pre-commit)
+
+Run `pnpm smoke` (which is `typecheck && lint && test:unit && next build`). All four must pass. Don't bypass by editing the script.
+
+### 13. Trigger-Type Addition Checklist
+
+Adding a new automation trigger (`comment`, `dm`, `storyReply`, `mention`, `liveComment`, …) is the highest-blast-radius change pattern in this codebase. Skipping any of these results in silent regression. **All eight bullets are mandatory:**
+
+1. **Zod enum** — extend `AutomationSchema.trigger` enum in `packages/shared/src/db/schema.ts`
+2. **Event kind** — if the trigger fires off a webhook event kind that doesn't exist yet, extend `EventSchema.kind` enum too
+3. **DB migration** — `ALTER TABLE "automations" DROP CONSTRAINT "automations_trigger_check"; ALTER TABLE "automations" ADD CONSTRAINT "automations_trigger_check" CHECK ("trigger" IN ('comment','dm', …))`. Same for `events.kind` if changed.
+4. **Webhook subscription** — `WEBHOOK_FIELDS` in `packages/shared/src/handlers/igAccounts/connectIgAccount.ts`. Note the Meta lesson (2026-05-04): subscribing to a field without Advanced Access fails the whole call. Subscribe only to fields you have permission for; ship the trigger as "Pending Meta approval" in the UI until then.
+5. **`processEvent` dispatcher** — branch on `event.kind` and dispatch to `process<X>Event` handler
+6. **New `process<X>Event` handler** — mirror the shape of `processCommentEvent`: load active automations matching the trigger, match keywords, enqueue `send-dm`
+7. **UI** — add the option to the trigger dropdown in `apps/web/components/automations/automation-form.tsx`. Mark "Beta" / "Pending approval" if Meta hasn't granted the permission yet.
+8. **Tests** — E2E that creates an automation with the new trigger; integration test that fakes the event and asserts a `send` row is created
+
+### 14. Form-Change Audit
+
+Any change to a form (new field, new gate, removed field) requires:
+
+1. **Form component** updated (state, validation, submit predicate)
+2. **API route** updated to validate / pass through the new field
+3. **Handler / Zod input schema** updated
+4. **Existing E2E tests** that fill this form: grep for the form's `data-testid` (e.g. `getByTestId('workspace-submit')`) and update every fill+click sequence
+5. **Existing raw-fetch tests** that bypass the form: grep for the API path (e.g. `/api/v1/tenants`) and update request bodies
+6. **Lessons learned** in `CLAUDE.md` if the change pattern is novel
 
 ---
 
@@ -1155,4 +1244,14 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-05 — Required-checkbox consent gates need three layers: Zod literal `z.literal(true)` at the API boundary; HTML `required` + disabled submit on the form; and a server-side error message that's specific (`"Processing consent is required"`) so operators can debug without reading the Zod tree. The Zod literal alone is not enough — the form silently skipping submit is bad UX.
 - 2026-05-05 — Existing form-submit E2E tests break when you add a required consent checkbox to the form. Search for `getByTestId('workspace-submit').click()` (or signup-submit) and add `getByTestId('workspace-processing-consent').check()` before the click. Same for any raw-fetch tests bypassing the form (e.g. duplicate-tenant 409 test) — add `processingConsent: true` to the request body.
 - 2026-05-05 — Biome's `lint/a11y/useSemanticElements` flags `<div role="dialog">` and recommends `<dialog>`. Native `<dialog>` requires `showModal()` programmatic open and brings its own `::backdrop` styling. For Tailwind-styled custom modals, suppress the rule with `// biome-ignore lint/a11y/useSemanticElements: <reason>` — the ARIA-equivalent div is well-supported by screen readers.
+
+### Spec 015 lessons (2026-05-05)
+
+**DM-keyword automation — first real exercise of CLAUDE.md §13 trigger-addition checklist**
+- 2026-05-05 — Postgres `CHECK ("trigger" IN (...))` constraints declared inline get auto-named `automations_trigger_check`. To extend the enum, the migration is `ALTER TABLE … DROP CONSTRAINT IF EXISTS … ADD CONSTRAINT … CHECK …` wrapped in a `BEGIN; … COMMIT;` transaction so no insert can sneak through with a value the new constraint rejects. The `IF EXISTS` makes the migration re-runnable.
+- 2026-05-05 — Parallel dispatch of two handlers from `processEvent` (`captureLead` + `processDmEvent` for `kind=message`) introduces a partial-failure retry hazard: if `processDmEvent` enqueues a send then throws, BullMQ retries the whole job and the second invocation re-enqueues another send. Mitigation: `processDmEvent` checks `db.count('sends', { eventId })` at the top and bails if any send already exists for this event. `processCommentEvent` has the same theoretical hazard (mid-loop throw after partial enqueue) and should adopt the same defence in a follow-up cleanup.
+- 2026-05-05 — `pnpm smoke` (typecheck + lint + test:unit + next build) is the right pre-commit gate shape. Lint runs `biome check` only — the script intentionally does NOT auto-fix to keep CI deterministic. If lint fails on a local run, run `pnpm exec biome check --write .` separately, then re-run smoke.
+- 2026-05-05 — Adding a value to a Zod enum (`AutomationSchema.trigger`) automatically flows through `z.infer` to the `Automation` type — no manual type update needed. Also update the `CreateAutomationInput` Zod schema in the handler (separate enum literal that doesn't derive from the schema) and the inline UI literal types in form components (`type TriggerType = ...`).
+- 2026-05-05 — When a feature reuses an existing API surface (`POST /api/v1/automations` accepted a `trigger` field already), no new route is needed. Verify by grepping the route handler for the field name; in our case `automations/route.ts` already passed `trigger` through to `createAutomation`. Adding a fourth enum value needed zero route changes.
+- 2026-05-05 — Windows + OneDrive + Next.js: `.next/diagnostics/build-diagnostics.json` occasionally errors with `EINVAL: invalid argument, readlink` because OneDrive holds a stale symlink. Fix: `rm -rf apps/web/.next` then re-run `next build`. Windows-environment quirk, not a Next.js bug.
 

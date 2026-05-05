@@ -2,7 +2,7 @@
  * Spec 003 §10.2 — schema unit tests.
  */
 import { describe, expect, it } from 'vitest';
-import { TenantSchema, TenantUserSchema, slugify } from './schema.js';
+import { AutomationSchema, TenantSchema, TenantUserSchema, slugify } from './schema.js';
 
 const VALID_TENANT = {
   _id: '11111111-1111-4111-8111-111111111111',
@@ -102,5 +102,37 @@ describe('slugify', () => {
     expect(() => slugify('test', 'XYZ')).toThrow();
     expect(() => slugify('test', 'a3f9c')).toThrow(); // 5 chars
     expect(() => slugify('test', 'a3f9c2d')).toThrow(); // 7 chars
+  });
+});
+
+describe('AutomationSchema (spec 015 — trigger enum)', () => {
+  const baseAutomation = {
+    _id: '11111111-1111-4111-8111-111111111111',
+    tenantId: '22222222-2222-4222-8222-222222222222',
+    igAccountId: '33333333-3333-4333-8333-333333333333',
+    name: 'Test Automation',
+    status: 'active' as const,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  it('A1: accepts trigger="comment" (existing)', () => {
+    expect(() => AutomationSchema.parse({ ...baseAutomation, trigger: 'comment' })).not.toThrow();
+  });
+
+  it('A2: accepts trigger="dm" (spec 015)', () => {
+    expect(() => AutomationSchema.parse({ ...baseAutomation, trigger: 'dm' })).not.toThrow();
+  });
+
+  it('A3: accepts trigger="storyReply" + "mention"', () => {
+    expect(() =>
+      AutomationSchema.parse({ ...baseAutomation, trigger: 'storyReply' }),
+    ).not.toThrow();
+    expect(() => AutomationSchema.parse({ ...baseAutomation, trigger: 'mention' })).not.toThrow();
+  });
+
+  it('A4: rejects unknown trigger value', () => {
+    expect(() => AutomationSchema.parse({ ...baseAutomation, trigger: 'banana' })).toThrow();
+    expect(() => AutomationSchema.parse({ ...baseAutomation, trigger: 'DM' })).toThrow(); // case-sensitive
   });
 });

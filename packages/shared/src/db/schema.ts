@@ -86,7 +86,10 @@ export const AutomationSchema = z.object({
   tenantId: z.string().uuid(),
   igAccountId: z.string().uuid(),
   name: z.string().min(1).max(120),
-  trigger: z.enum(['comment', 'storyReply', 'mention']),
+  // Spec 015 — `dm` added so an automation can fire on inbound DMs.
+  // Spec 017 (story-reply) + post-launch (mention) extend further; both
+  // are gated on Meta App Review for `instagram_manage_messages`.
+  trigger: z.enum(['comment', 'dm', 'storyReply', 'mention']),
   status: z.enum(['active', 'paused', 'archived']),
   createdAt: z.date(),
   updatedAt: z.date(),

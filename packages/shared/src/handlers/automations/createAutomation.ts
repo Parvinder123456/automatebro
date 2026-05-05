@@ -15,7 +15,8 @@ import type { Automation, ResponseRecord, Trigger } from '../../types/tenant.js'
 export const CreateAutomationInput = z.object({
   igAccountId: z.string().uuid(),
   name: z.string().trim().min(1).max(120),
-  trigger: z.enum(['comment', 'storyReply', 'mention']).default('comment'),
+  // Spec 015 — `dm` added so an automation can fire on inbound DMs.
+  trigger: z.enum(['comment', 'dm', 'storyReply', 'mention']).default('comment'),
   status: z.enum(['active', 'paused', 'archived']).default('active'),
   keywords: z.array(z.string().trim().min(1)).min(1).max(50),
   matchMode: z.enum(['contains', 'exact', 'startsWith']).default('contains'),
