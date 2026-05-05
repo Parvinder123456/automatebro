@@ -69,7 +69,7 @@
 | 4.2 | Story-mentions automation | ❌ pending | Schema enum has `mention`. Same App Review gate as 1.4. |
 | 4.3 | AI-suggested automations | ❌ pending | "We saw 12 pricing-intent comments this week, want to auto-DM your pricing PDF?" |
 | 4.4 | Tag editing UI for leads | ❌ pending | Schema supports `tags[]`; no UI. |
-| 4.5 | Test-fire button on automations | ❌ pending | Send a sample DM to yourself for QA. |
+| 4.5 | Test-fire button on automations | ✅ live on master | Spec 022 — `previewAutomation` handler (pure dry-run, no send / AI / DB write), `POST /api/v1/automations/[id]/preview`, modal opened from row-actions. AI mode shows fallback template (real AI is runtime-only). |
 | 4.6 | Copy-automation duplication | ❌ pending | Agencies running multiple clients. |
 | 4.7 | Empty-state onboarding tour | ❌ pending | "You have 0 automations — here's how to make your first one." |
 | 4.8 | Inline editing on tables | ❌ pending | Currently every mutation goes through a dedicated form page. |

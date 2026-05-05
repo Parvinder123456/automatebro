@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { TestFireModal } from './test-fire-modal';
 
 export function RowActions({
   automationId,
@@ -12,6 +13,8 @@ export function RowActions({
 }) {
   const router = useRouter();
   const busyRef = useRef(false);
+  // Spec 022 / Phase 4.5 — test-fire modal state per row.
+  const [testFireOpen, setTestFireOpen] = useState(false);
 
   async function toggleStatus() {
     if (busyRef.current) return;
@@ -44,13 +47,28 @@ export function RowActions({
   }
 
   return (
-    <span className="flex gap-2">
-      <button type="button" onClick={toggleStatus} className="text-xs underline">
-        {status === 'active' ? 'Pause' : 'Resume'}
-      </button>
-      <button type="button" onClick={handleDelete} className="text-xs text-red-600 underline">
-        Delete
-      </button>
-    </span>
+    <>
+      <span className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setTestFireOpen(true)}
+          className="text-xs underline"
+          data-testid={`test-fire-button-${automationId}`}
+        >
+          Test fire
+        </button>
+        <button type="button" onClick={toggleStatus} className="text-xs underline">
+          {status === 'active' ? 'Pause' : 'Resume'}
+        </button>
+        <button type="button" onClick={handleDelete} className="text-xs text-red-600 underline">
+          Delete
+        </button>
+      </span>
+      <TestFireModal
+        automationId={automationId}
+        open={testFireOpen}
+        onClose={() => setTestFireOpen(false)}
+      />
+    </>
   );
 }

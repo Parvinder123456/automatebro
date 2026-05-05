@@ -31,6 +31,7 @@
     "./handlers/automations/listAutomations": "./src/handlers/automations/listAutomations.ts",
     "./handlers/automations/updateAutomation": "./src/handlers/automations/updateAutomation.ts",
     "./handlers/automations/deleteAutomation": "./src/handlers/automations/deleteAutomation.ts",
+    "./handlers/automations/previewAutomation": "./src/handlers/automations/previewAutomation.ts",
     "./handlers/processCommentEvent": "./src/handlers/processCommentEvent.ts",
     "./handlers/processDmEvent": "./src/handlers/processDmEvent.ts",
     "./handlers/processStoryReplyEvent": "./src/handlers/processStoryReplyEvent.ts",
