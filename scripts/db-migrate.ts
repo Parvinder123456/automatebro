@@ -20,7 +20,24 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from 'pg';
-import { loadEnv } from '../packages/shared/src/env.js';
+
+/**
+ * Read STRICTDB_URI directly from process.env. We INTENTIONALLY do NOT
+ * call loadEnv() here — the full validator requires every Meta secret
+ * (including ones the migration runner doesn't use), and a partial .env
+ * shouldn't block schema migrations. The migration runner is a CLI
+ * admin tool; only STRICTDB_URI matters.
+ *
+ * If STRICTDB_URI is missing we fail fast with a clear message.
+ */
+function getStrictDbUri(): string {
+  const uri = process.env.STRICTDB_URI;
+  if (uri === undefined || uri === '') {
+    console.error('✗ STRICTDB_URI is not set. Add it to .env or export it before running.');
+    process.exit(1);
+  }
+  return uri;
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MIG_DIR = join(__dirname, 'migrations');
@@ -78,8 +95,7 @@ interface MigrateResult {
 }
 
 async function migrate(checkOnly: boolean): Promise<MigrateResult> {
-  const env = loadEnv();
-  const client = new Client({ connectionString: env.STRICTDB_URI });
+  const client = new Client({ connectionString: getStrictDbUri() });
   await client.connect();
 
   const result: MigrateResult = { applied: [], pending: [], errors: [] };

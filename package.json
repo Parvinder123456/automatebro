@@ -35,8 +35,8 @@
     "test:kill-ports": "node ./scripts/kill-ports.mjs 4000 4010 4020",
     "db:query": "tsx scripts/db-query.ts",
     "db:query:list": "tsx scripts/db-query.ts --list",
-    "db:migrate": "tsx scripts/db-migrate.ts",
-    "db:migrate:check": "tsx scripts/db-migrate.ts --check",
+    "db:migrate": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs scripts/db-migrate.ts",
+    "db:migrate:check": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs scripts/db-migrate.ts --check",
     "clean": "rimraf dist coverage test-results playwright-report \"**/.next\" \"**/.turbo\""
   },
   "dependencies": {
