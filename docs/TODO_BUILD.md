@@ -68,7 +68,7 @@
 | 4.1 | Live-comments automation | ❌ pending | Meta `comments` field includes Live; just needs differentiation in `processEvent` + UI option. |
 | 4.2 | Story-mentions automation | ❌ pending | Schema enum has `mention`. Same App Review gate as 1.4. |
 | 4.3 | AI-suggested automations | ❌ pending | "We saw 12 pricing-intent comments this week, want to auto-DM your pricing PDF?" |
-| 4.4 | Tag editing UI for leads | ❌ pending | Schema supports `tags[]`; no UI. |
+| 4.4 | Tag editing UI for leads | ✅ live on master | Spec 024 — `updateLeadTags` handler with replace/add/remove modes, normalisation (trim/lowercase/dedup, 64-char per tag, 32-tag cap). `PATCH /api/v1/leads/[id]/tags`. Inline chip editor on the leads page (Enter/comma to add, × to remove, Backspace on empty input removes last). |
 | 4.5 | Test-fire button on automations | ✅ live on master | Spec 022 — `previewAutomation` handler (pure dry-run, no send / AI / DB write), `POST /api/v1/automations/[id]/preview`, modal opened from row-actions. AI mode shows fallback template (real AI is runtime-only). |
 | 4.6 | Copy-automation duplication | ✅ live on master | Spec 023 — `duplicateAutomation` handler clones trigger + response transactionally with new UUIDs, defaults to status='paused', name suffix "(copy)". `POST /api/v1/automations/[id]/duplicate` accepts optional igAccountId override (cross-tenant verified). "Duplicate" button in row-actions. |
 | 4.7 | Empty-state onboarding tour | ❌ pending | "You have 0 automations — here's how to make your first one." |

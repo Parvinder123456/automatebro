@@ -1,6 +1,7 @@
 import { listLeads } from '@automatebro/shared/handlers/leads/listLeads';
 import { redirect } from 'next/navigation';
 import { Pager } from '../../../../components/app/pager';
+import { TagEditor } from '../../../../components/leads/tag-editor';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'Leads — AutomateBro' };
@@ -51,6 +52,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
                 <th className="pb-2">Username</th>
                 <th className="pb-2">Email</th>
                 <th className="pb-2">Phone</th>
+                <th className="pb-2">Tags</th>
                 <th className="pb-2">First seen</th>
               </tr>
             </thead>
@@ -60,6 +62,9 @@ export default async function LeadsPage({ searchParams }: PageProps) {
                   <td className="py-2">{lead.igUsername ?? '—'}</td>
                   <td className="py-2">{lead.email ?? '—'}</td>
                   <td className="py-2">{lead.phone ?? '—'}</td>
+                  <td className="py-2">
+                    <TagEditor leadId={lead._id} initialTags={lead.tags} />
+                  </td>
                   <td className="py-2">
                     {lead.firstSeenAt ? new Date(lead.firstSeenAt).toLocaleDateString() : '—'}
                   </td>
