@@ -71,7 +71,7 @@
 | 4.4 | Tag editing UI for leads | ✅ live on master | Spec 024 — `updateLeadTags` handler with replace/add/remove modes, normalisation (trim/lowercase/dedup, 64-char per tag, 32-tag cap). `PATCH /api/v1/leads/[id]/tags`. Inline chip editor on the leads page (Enter/comma to add, × to remove, Backspace on empty input removes last). |
 | 4.5 | Test-fire button on automations | ✅ live on master | Spec 022 — `previewAutomation` handler (pure dry-run, no send / AI / DB write), `POST /api/v1/automations/[id]/preview`, modal opened from row-actions. AI mode shows fallback template (real AI is runtime-only). |
 | 4.6 | Copy-automation duplication | ✅ live on master | Spec 023 — `duplicateAutomation` handler clones trigger + response transactionally with new UUIDs, defaults to status='paused', name suffix "(copy)". `POST /api/v1/automations/[id]/duplicate` accepts optional igAccountId override (cross-tenant verified). "Duplicate" button in row-actions. |
-| 4.7 | Empty-state onboarding tour | ❌ pending | "You have 0 automations — here's how to make your first one." |
+| 4.7 | Empty-state onboarding tour | ✅ live on master | Spec 025 — `<OnboardingChecklist />` on /app/dashboard (4 steps, auto-hides when complete, derived from existing data, no new fetches). Improved empty states on /app/automations (template cards + IG-prereq hint), /app/leads (lead-capture explainer + CTA), /app/sends (status-aware copy + clear-filter helper). |
 | 4.8 | Inline editing on tables | ❌ pending | Currently every mutation goes through a dedicated form page. |
 
 ### Phase 5 — Platform plumbing (still missing)

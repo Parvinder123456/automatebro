@@ -5,6 +5,7 @@ import { countLeads } from '@automatebro/shared/handlers/leads/countLeads';
 import { countSendsLast24h } from '@automatebro/shared/handlers/sends/countSendsLast24h';
 import { redirect } from 'next/navigation';
 import { AiUsageCard } from '../../../../components/dashboard/ai-usage-card';
+import { OnboardingChecklist } from '../../../../components/dashboard/onboarding-checklist';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'Dashboard — AutomateBro' };
@@ -40,6 +41,15 @@ export default async function DashboardPage() {
   return (
     <div className="p-8" data-testid="dashboard-page">
       <h1 className="mb-6 text-2xl font-semibold">Dashboard</h1>
+
+      {/* Spec 025 / Phase 4.7 — auto-hides once all 4 steps are done. */}
+      <OnboardingChecklist
+        igAccountCount={accounts.length}
+        automationCount={automations.total}
+        sendCount={sendCount}
+        leadCount={leadCount}
+      />
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="rounded border p-4">

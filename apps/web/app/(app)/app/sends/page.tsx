@@ -45,7 +45,33 @@ export default async function SendsPage({ searchParams }: PageProps) {
       <StatusFilter current={statusFilter} />
 
       {result.total === 0 ? (
-        <p className="text-gray-500">No sends yet.</p>
+        <div
+          className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center"
+          data-testid="sends-empty"
+        >
+          <p className="mb-2 text-base font-medium">
+            {statusFilter !== undefined ? `No ${statusFilter} sends` : 'No sends yet'}
+          </p>
+          <p className="mx-auto mb-4 max-w-md text-sm text-gray-600">
+            {statusFilter !== undefined
+              ? 'Try a different status filter or remove the filter to see all sends.'
+              : 'Sends appear here when an active automation fires. Each row shows the rendered DM, status (queued/sent/failed/rate-limited), and the queue time.'}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {statusFilter !== undefined ? (
+              <a href="/app/sends" className="rounded border px-4 py-2 text-sm hover:bg-gray-50">
+                Clear filter
+              </a>
+            ) : (
+              <a
+                href="/app/automations"
+                className="rounded bg-black px-4 py-2 text-sm text-white hover:opacity-90"
+              >
+                Open automations →
+              </a>
+            )}
+          </div>
+        </div>
       ) : (
         <>
           <table className="w-full text-left text-sm" data-testid="sends-table">

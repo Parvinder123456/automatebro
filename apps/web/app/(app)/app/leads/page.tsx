@@ -43,7 +43,31 @@ export default async function LeadsPage({ searchParams }: PageProps) {
       </div>
 
       {result.total === 0 ? (
-        <p className="text-gray-500">No leads captured yet.</p>
+        <div
+          className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center"
+          data-testid="leads-empty"
+        >
+          <p className="mb-2 text-base font-medium">No leads captured yet</p>
+          <p className="mx-auto mb-4 max-w-md text-sm text-gray-600">
+            Leads are captured when an Instagram user replies to your auto-DM with their email or
+            phone number. Configure an automation that asks for contact info, then watch this page
+            fill up.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="/app/automations/new"
+              className="rounded bg-black px-4 py-2 text-sm text-white hover:opacity-90"
+            >
+              Create lead-capture automation →
+            </a>
+            <a
+              href="/app/automations"
+              className="rounded border px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              See existing automations
+            </a>
+          </div>
+        </div>
       ) : (
         <>
           <table className="w-full text-left text-sm" data-testid="leads-table">
