@@ -32,8 +32,8 @@
 
 | # | Item | Status | Risk | Notes |
 |---|---|---|---|---|
-| 1.1 | **DM-keyword automation** ("user DMs you") | 🟡 in flight (`feat/phase1-dm-keyword`) | Low | Webhook ingest is already there; extend `processEvent` for `kind=message` to match active DM-trigger automations alongside `captureLead`. New trigger enum value, migration, UI option. |
-| 1.2 | **AI sentiment / intent classifier** | ❌ pending | Low | Layered on `adapters/openai.ts`. Tag inbound comment/DM as `buying`, `support`, `spam`. Fires before automation match — opens "AI smart triggers" feature. |
+| 1.1 | **DM-keyword automation** ("user DMs you") | ✅ shipped (`feat/phase1-dm-keyword` merged) | Low | Spec 015 — `'dm'` trigger enum, migration 009, `processDmEvent` parallel-dispatch with `captureLead`, UI radio option. |
+| 1.2 | **AI sentiment / intent classifier** | 🟡 in flight (`feat/phase1-2-ai-classifier`) | Low | Spec 016 — gpt-4o-mini classifier on inbound, persisted on `events.intent`, optional `triggers.intents` gate. Confidence floor 0.5. Cap-aware: skip on cap-exceeded, gate bypassed (logged). UI multi-select shipped. |
 | 1.3 | **Real post picker** | ❌ pending | Med | Replace newline-separated textarea with a thumbnail grid via Meta Graph `/me/media`. ~2 days. Big UX gap vs LinkPlease. |
 | 1.4 | **Story-reply automation** | ❌ pending | High | Schema enum already has `storyReply`. Needs Meta `instagram_manage_messages` permission via App Review. Build the code; ship UI as "Pending Meta approval" until granted. |
 

@@ -11,6 +11,7 @@ import { getDb } from '../db/client.js';
 import { logger } from '../logger.js';
 import { eventsQueue } from '../queue/queues.js';
 import type { Automation, EventRecord, ResponseRecord, Send, Trigger } from '../types/tenant.js';
+import { classifyEventIntent, intentGateAllows } from './classifyIntent.js';
 
 export interface ProcessCommentResult {
   matched: number;
@@ -72,6 +73,12 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
     return result;
   }
 
+  // Spec 016 — classify the event intent before automation matching.
+  // Idempotent (no-op if already classified). Failure / cap-exceeded
+  // returns null intent and the gate is bypassed downstream.
+  const classification = await classifyEventIntent(event);
+  const eventIntent = classification.intent;
+
   const db = await getDb();
 
   // Find active comment-trigger automations for this igAccount.
@@ -100,6 +107,12 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
     // Keyword match (any keyword)
     const hit = trigger.keywords.some((kw) => matchesKeyword(commentText, kw, trigger.matchMode));
     if (!hit) continue;
+
+    // Spec 016 — intent gate. When trigger.intents is non-empty and
+    // the event was classified, only fire if the classified intent is
+    // in the trigger's allowed list. Unclassified events bypass the
+    // gate (cap-exceeded fallthrough; see spec 016 §3.4).
+    if (!intentGateAllows(trigger.intents ?? null, eventIntent)) continue;
     result.matched += 1;
 
     const responseRow = await db.queryOne<ResponseRecord>('responses', {

@@ -5,6 +5,7 @@
 import { z } from 'zod';
 import type { Ctx } from '../../auth/ctx.js';
 import { repo } from '../../db/repo.js';
+import { IntentSchema } from '../../db/schema.js';
 
 export const UpdateAutomationInput = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -12,6 +13,8 @@ export const UpdateAutomationInput = z.object({
   keywords: z.array(z.string().trim().min(1)).min(1).max(50).optional(),
   matchMode: z.enum(['contains', 'exact', 'startsWith']).optional(),
   postIds: z.array(z.string().min(1)).max(500).nullable().optional(),
+  // Spec 016 — accept intents on patch too. Pass null to clear the gate.
+  intents: z.array(IntentSchema).max(4).nullable().optional(),
   response: z
     .object({
       mode: z.enum(['static', 'ai']).optional(),
@@ -38,6 +41,10 @@ export async function updateAutomation(
   if (input.keywords !== undefined) triggerFields.keywords = input.keywords;
   if (input.matchMode !== undefined) triggerFields.matchMode = input.matchMode;
   if (input.postIds !== undefined) triggerFields.postIds = input.postIds;
+  if (input.intents !== undefined) {
+    triggerFields.intents =
+      input.intents === null || input.intents.length === 0 ? null : input.intents;
+  }
 
   // updateOne returns truthy on update or no-op (nothing matched).
   await repo.updateOne('automations', { _id: automationId }, { $set: automationFields }, ctx);

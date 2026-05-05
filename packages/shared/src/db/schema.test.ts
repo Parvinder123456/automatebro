@@ -2,7 +2,15 @@
  * Spec 003 §10.2 — schema unit tests.
  */
 import { describe, expect, it } from 'vitest';
-import { AutomationSchema, TenantSchema, TenantUserSchema, slugify } from './schema.js';
+import {
+  AutomationSchema,
+  EventSchema,
+  IntentSchema,
+  TenantSchema,
+  TenantUserSchema,
+  TriggerSchema,
+  slugify,
+} from './schema.js';
 
 const VALID_TENANT = {
   _id: '11111111-1111-4111-8111-111111111111',
@@ -134,5 +142,85 @@ describe('AutomationSchema (spec 015 — trigger enum)', () => {
   it('A4: rejects unknown trigger value', () => {
     expect(() => AutomationSchema.parse({ ...baseAutomation, trigger: 'banana' })).toThrow();
     expect(() => AutomationSchema.parse({ ...baseAutomation, trigger: 'DM' })).toThrow(); // case-sensitive
+  });
+});
+
+describe('Spec 016 — IntentSchema + intent fields', () => {
+  it('I1: IntentSchema accepts the four labels', () => {
+    for (const label of ['buying', 'support', 'spam', 'other'] as const) {
+      expect(() => IntentSchema.parse(label)).not.toThrow();
+    }
+  });
+
+  it('I2: IntentSchema rejects unknown labels (and case mismatches)', () => {
+    expect(() => IntentSchema.parse('unknown')).toThrow();
+    expect(() => IntentSchema.parse('Buying')).toThrow();
+    expect(() => IntentSchema.parse('')).toThrow();
+  });
+
+  it('I3: TriggerSchema accepts intents = null / [] / ["buying"]', () => {
+    const baseTrigger = {
+      _id: '11111111-1111-4111-8111-111111111111',
+      tenantId: '22222222-2222-4222-8222-222222222222',
+      automationId: '33333333-3333-4333-8333-333333333333',
+      keywords: ['LINK'],
+      matchMode: 'contains' as const,
+    };
+    expect(() => TriggerSchema.parse({ ...baseTrigger, intents: null })).not.toThrow();
+    expect(() => TriggerSchema.parse({ ...baseTrigger, intents: [] })).not.toThrow();
+    expect(() => TriggerSchema.parse({ ...baseTrigger, intents: ['buying'] })).not.toThrow();
+    expect(() =>
+      TriggerSchema.parse({ ...baseTrigger, intents: ['buying', 'support'] }),
+    ).not.toThrow();
+  });
+
+  it('I4: TriggerSchema rejects unknown intent value', () => {
+    const baseTrigger = {
+      _id: '11111111-1111-4111-8111-111111111111',
+      tenantId: '22222222-2222-4222-8222-222222222222',
+      automationId: '33333333-3333-4333-8333-333333333333',
+      keywords: ['LINK'],
+      matchMode: 'contains' as const,
+    };
+    expect(() => TriggerSchema.parse({ ...baseTrigger, intents: ['banana'] })).toThrow();
+  });
+
+  it('I5: EventSchema accepts intent + intentConfidence (or null)', () => {
+    const baseEvent = {
+      _id: '44444444-4444-4444-8444-444444444444',
+      tenantId: null,
+      metaEventId: 'meta-1',
+      kind: 'comment' as const,
+      igAccountId: null,
+      payload: {},
+      signatureVerified: true,
+      receivedAt: new Date(),
+    };
+    expect(() => EventSchema.parse(baseEvent)).not.toThrow();
+    expect(() =>
+      EventSchema.parse({ ...baseEvent, intent: 'buying', intentConfidence: 0.9 }),
+    ).not.toThrow();
+    expect(() =>
+      EventSchema.parse({ ...baseEvent, intent: null, intentConfidence: null }),
+    ).not.toThrow();
+  });
+
+  it('I6: EventSchema rejects out-of-range confidence', () => {
+    const baseEvent = {
+      _id: '44444444-4444-4444-8444-444444444444',
+      tenantId: null,
+      metaEventId: 'meta-1',
+      kind: 'comment' as const,
+      igAccountId: null,
+      payload: {},
+      signatureVerified: true,
+      receivedAt: new Date(),
+    };
+    expect(() =>
+      EventSchema.parse({ ...baseEvent, intent: 'buying', intentConfidence: 1.5 }),
+    ).toThrow();
+    expect(() =>
+      EventSchema.parse({ ...baseEvent, intent: 'buying', intentConfidence: -0.1 }),
+    ).toThrow();
   });
 });

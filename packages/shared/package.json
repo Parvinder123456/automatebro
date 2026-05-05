@@ -42,7 +42,8 @@
     "./handlers/sends/listSends": "./src/handlers/sends/listSends.ts",
     "./handlers/sends/countSendsLast24h": "./src/handlers/sends/countSendsLast24h.ts",
     "./handlers/privacy/exportTenantData": "./src/handlers/privacy/exportTenantData.ts",
-    "./handlers/privacy/requestTenantDeletion": "./src/handlers/privacy/requestTenantDeletion.ts"
+    "./handlers/privacy/requestTenantDeletion": "./src/handlers/privacy/requestTenantDeletion.ts",
+    "./handlers/classifyIntent": "./src/handlers/classifyIntent.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

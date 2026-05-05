@@ -45,6 +45,12 @@ export const TenantUserSchema = z.object({
   acceptedAt: z.date(),
 });
 
+// Spec 016 — AI intent classifier vocabulary. Four labels chosen for
+// clarity + actionability. Adding a label is a Zod-only change (no DB
+// migration) because the underlying SQL column is plain TEXT.
+export const IntentSchema = z.enum(['buying', 'support', 'spam', 'other']);
+export type Intent = z.infer<typeof IntentSchema>;
+
 export const EventSchema = z.object({
   _id: z.string().uuid(),
   tenantId: z.string().uuid().nullable(),
@@ -55,6 +61,10 @@ export const EventSchema = z.object({
   signatureVerified: z.boolean(),
   receivedAt: z.date(),
   processedAt: z.date().nullable().optional(),
+  // Spec 016 — populated by classifyIntent on the worker. NULL until
+  // classified (or when the AI cap is exceeded for this tenant/month).
+  intent: IntentSchema.nullable().optional(),
+  intentConfidence: z.number().min(0).max(1).nullable().optional(),
 });
 
 export const LeadSchema = z.object({
@@ -102,6 +112,10 @@ export const TriggerSchema = z.object({
   keywords: z.array(z.string().min(1)).min(1),
   matchMode: z.enum(['contains', 'exact', 'startsWith']),
   postIds: z.array(z.string()).nullable().optional(),
+  // Spec 016 — when non-null and non-empty, the trigger only fires if
+  // the event's classified intent is in this list. NULL or [] = "any
+  // intent" (default; backwards-compatible with pre-spec-016 triggers).
+  intents: z.array(IntentSchema).nullable().optional(),
 });
 
 export const ResponseSchema = z.object({

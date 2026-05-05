@@ -21,6 +21,7 @@ import { getDb } from '../db/client.js';
 import { logger } from '../logger.js';
 import { eventsQueue } from '../queue/queues.js';
 import type { Automation, EventRecord, ResponseRecord, Send, Trigger } from '../types/tenant.js';
+import { classifyEventIntent, intentGateAllows } from './classifyIntent.js';
 
 export interface ProcessDmResult {
   matched: number;
@@ -97,6 +98,12 @@ export async function processDmEvent(event: EventRecord): Promise<ProcessDmResul
     return result;
   }
 
+  // Spec 016 — classify the event intent before automation matching.
+  // Idempotent (no-op if already classified). Failure / cap-exceeded
+  // returns null intent and the gate is bypassed downstream.
+  const classification = await classifyEventIntent(event);
+  const eventIntent = classification.intent;
+
   // Find active DM-trigger automations for this igAccount.
   const automations = await db.queryMany<Automation>(
     'automations',
@@ -122,6 +129,10 @@ export async function processDmEvent(event: EventRecord): Promise<ProcessDmResul
     // Keyword match (any keyword)
     const hit = trigger.keywords.some((kw) => matchesKeyword(messageText, kw, trigger.matchMode));
     if (!hit) continue;
+
+    // Spec 016 — intent gate. See processCommentEvent for the same
+    // pattern. Unclassified events bypass the gate (spec 016 §3.4).
+    if (!intentGateAllows(trigger.intents ?? null, eventIntent)) continue;
     result.matched += 1;
 
     const responseRow = await db.queryOne<ResponseRecord>('responses', {

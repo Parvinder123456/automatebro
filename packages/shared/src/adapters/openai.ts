@@ -156,3 +156,72 @@ export function computeCostPaise(inputTokens: number, outputTokens: number): num
   const usd = (inputTokens * PRICE_INPUT_USD + outputTokens * PRICE_OUTPUT_USD) / 1_000_000;
   return Math.ceil(usd * INR_PER_USD * PAISE_PER_INR);
 }
+
+// ---------- Spec 016: intent classifier ----------
+
+const INTENT_LABELS = ['buying', 'support', 'spam', 'other'] as const;
+type IntentLabel = (typeof INTENT_LABELS)[number];
+
+const CLASSIFY_SYSTEM_PROMPT = `You classify Instagram comments and DMs into ONE of four intents:
+- buying: user expresses purchase intent ("how much?", "is this in stock?", "I'll take 2", "where to order").
+- support: user has a question, problem, or complaint about an order, product, or service.
+- spam: promotional/irrelevant link drops, repetitive emoji floods, scams, or off-topic noise.
+- other: greetings, compliments, ambiguous chatter that doesn't fit the other three.
+Reply ONLY as compact JSON: {"intent":"...","confidence":0.0-1.0}. Confidence reflects how clearly the input fits the chosen label. No prose.`;
+
+export interface ClassifyIntentInput {
+  text: string;
+}
+
+export interface ClassifyIntentResult {
+  intent: IntentLabel;
+  confidence: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export async function classifyIntent(
+  input: ClassifyIntentInput,
+  opts: OpenAiCallOpts,
+): Promise<ClassifyIntentResult> {
+  const body = {
+    model: MODEL_CHAT,
+    messages: [
+      { role: 'system', content: CLASSIFY_SYSTEM_PROMPT },
+      { role: 'user', content: input.text },
+    ],
+    max_tokens: 30,
+    temperature: 0.0,
+    // Force structured JSON output.
+    response_format: { type: 'json_object' },
+  };
+  const result = (await openaiFetch(CHAT_URL, body, opts)) as {
+    choices?: Array<{ message?: { content?: string } }>;
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  const content = result.choices?.[0]?.message?.content ?? '';
+  if (content === '') {
+    throw new OpenAiError('OpenAI classifier returned empty content', 0, false);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new OpenAiError(`OpenAI classifier returned non-JSON: ${content.slice(0, 80)}`, 0, false);
+  }
+  const obj = parsed as { intent?: unknown; confidence?: unknown };
+  const rawIntent = typeof obj.intent === 'string' ? obj.intent.toLowerCase() : '';
+  const intent = (INTENT_LABELS as readonly string[]).includes(rawIntent)
+    ? (rawIntent as IntentLabel)
+    : 'other';
+  const rawConfidence = typeof obj.confidence === 'number' ? obj.confidence : 0;
+  const confidence = Math.max(0, Math.min(1, rawConfidence));
+
+  return {
+    intent,
+    confidence,
+    inputTokens: result.usage?.prompt_tokens ?? 0,
+    outputTokens: result.usage?.completion_tokens ?? 0,
+  };
+}

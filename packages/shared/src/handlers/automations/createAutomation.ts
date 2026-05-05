@@ -10,6 +10,7 @@ import { z } from 'zod';
 import type { Ctx } from '../../auth/ctx.js';
 import { requireTenant } from '../../auth/ctx.js';
 import { getDb } from '../../db/client.js';
+import { IntentSchema } from '../../db/schema.js';
 import type { Automation, ResponseRecord, Trigger } from '../../types/tenant.js';
 
 export const CreateAutomationInput = z.object({
@@ -21,6 +22,9 @@ export const CreateAutomationInput = z.object({
   keywords: z.array(z.string().trim().min(1)).min(1).max(50),
   matchMode: z.enum(['contains', 'exact', 'startsWith']).default('contains'),
   postIds: z.array(z.string().min(1)).max(500).optional(),
+  // Spec 016 — optional intent gate. When non-empty, the trigger only
+  // fires if the AI-classified event intent matches one of these.
+  intents: z.array(IntentSchema).max(4).nullable().optional(),
   response: z.object({
     mode: z.enum(['static', 'ai']).default('static'),
     template: z.string().min(1).max(2000).nullable().optional(),
@@ -76,6 +80,7 @@ export async function createAutomation(
     keywords: input.keywords,
     matchMode: input.matchMode,
     postIds: input.postIds ?? null,
+    intents: input.intents && input.intents.length > 0 ? input.intents : null,
   };
   const responseRow: ResponseRecord = {
     _id: responseId,

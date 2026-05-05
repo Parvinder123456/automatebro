@@ -9,6 +9,13 @@ interface IgAccountOption {
 }
 
 type TriggerType = 'comment' | 'dm';
+type IntentLabel = 'buying' | 'support' | 'spam' | 'other';
+const INTENT_OPTIONS: Array<{ value: IntentLabel; label: string; hint: string }> = [
+  { value: 'buying', label: 'Buying', hint: 'Purchase intent — "how much?", "in stock?", etc.' },
+  { value: 'support', label: 'Support', hint: 'Questions or issues about an order/product.' },
+  { value: 'spam', label: 'Spam', hint: 'Promo links, scams, off-topic noise.' },
+  { value: 'other', label: 'Other', hint: 'Greetings, compliments, ambiguous chatter.' },
+];
 
 export function AutomationForm({
   igAccounts,
@@ -21,7 +28,18 @@ export function AutomationForm({
   // Spec 015 — local state so the form copy can adapt to which trigger
   // is selected (DMs aren't post-bound, comments mention "your post or reel").
   const [trigger, setTrigger] = useState<TriggerType>('comment');
+  // Spec 016 — optional intent gate. Empty set = "any intent" (default).
+  const [selectedIntents, setSelectedIntents] = useState<Set<IntentLabel>>(new Set());
   const submittingRef = useRef(false);
+
+  function toggleIntent(label: IntentLabel): void {
+    setSelectedIntents((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  }
 
   useEffect(() => {
     setHydrated(true);
@@ -39,6 +57,7 @@ export function AutomationForm({
       .map((k) => k.trim())
       .filter(Boolean);
 
+    const intentList = Array.from(selectedIntents);
     const body = {
       igAccountId: fd.get('igAccountId') as string,
       name: fd.get('name') as string,
@@ -47,6 +66,9 @@ export function AutomationForm({
       // from this form declares its trigger.
       trigger,
       keywords,
+      // Spec 016 — only send intents when at least one is selected;
+      // otherwise leave it null/undefined so the trigger is "any intent".
+      ...(intentList.length > 0 ? { intents: intentList } : {}),
       response: {
         mode: 'static' as const,
         template: fd.get('template') as string,
@@ -167,6 +189,35 @@ export function AutomationForm({
           className="mt-1 w-full rounded border px-3 py-2 text-sm"
         />
       </div>
+
+      <fieldset className="rounded border p-3" data-testid="intent-filter">
+        <legend className="px-1 text-sm font-medium">Intent filter (optional)</legend>
+        <p className="mb-2 text-xs text-gray-600">
+          Only fire when AI classifies the inbound text as one of these. Leave all unchecked to fire
+          on any intent (default).
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {INTENT_OPTIONS.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-start gap-2 rounded border p-2 text-sm hover:bg-gray-50"
+            >
+              <input
+                type="checkbox"
+                checked={selectedIntents.has(opt.value)}
+                onChange={() => toggleIntent(opt.value)}
+                data-testid={`intent-option-${opt.value}`}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="font-medium">{opt.label}</span>
+                <br />
+                <span className="text-xs text-gray-600">{opt.hint}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div>
         <label htmlFor="template" className="block text-sm font-medium">
