@@ -49,7 +49,7 @@
 |---|---|---|---|
 | 2.1 | Razorpay billing | ❌ KYC blocked | Spec 010 — checkout, subscription webhook, plan-tier enforcement, dunning. |
 | 2.2 | AI usage dashboard | ✅ live on master | Spec 019 — `getAiUsageSummary` handler, `GET /api/v1/aiUsage`, dashboard summary card + full `/app/settings/ai-usage` page with 6-month history. INR formatting uses Indian-locale grouping (1,00,000). |
-| 2.3 | Pagination + sortable tables | ❌ pending | Automations, leads, sends. Currently fixed limit (100 / 1000 / 1000). |
+| 2.3 | Pagination + sortable tables | 🟡 pagination ✅ live, sortable columns deferred | Spec 020 — `paginate()` helper, `Paginated<T>` shape, `?page=N&pageSize=M` query params on `/api/v1/{automations,leads,sends}`, Prev/Next URL-driven UI on all three list pages. Sortable column headers deferred to a v1.3 polish pass — current sorts are still fixed (createdAt desc / lastSeenAt desc / queuedAt desc). |
 
 ### Phase 3 — Differentiation
 

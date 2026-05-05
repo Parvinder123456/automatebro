@@ -1294,3 +1294,13 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-05 — Migration runner env-isolation pattern: a CLI admin tool (`scripts/db-migrate.ts`) shouldn't depend on the full app env validator. Read `process.env.STRICTDB_URI` directly with a clear `process.exit(1)` if missing. Keep `loadEnv()` for the app's runtime boundary; don't leak it into operator tools that have different env needs.
 - 2026-05-05 — `node --env-file-if-exists=.env` (Node 20+) is the cleanest way to load `.env` for CLI scripts without adding `dotenv` as a dependency. The `-if-exists` variant is silent when `.env` is absent (CI / Docker), erroring nowhere. Pair with the env-isolation pattern above so partial `.env` doesn't break admin tools.
 
+### Spec 020 / Phase 2.3 lessons (2026-05-05)
+
+**Pagination**
+- 2026-05-05 — `Paginated<T>` shape: `{ items, total, page, pageSize, hasNext }`. Pages are 1-indexed in the public API (URL `?page=1`); `skip = (page - 1) * pageSize` happens inside the helper. Returning `total` separately is essential for "Page X of Y" UI — without it, the client has to walk pages to know when to stop.
+- 2026-05-05 — Run `repo.queryMany` + `repo.count` in parallel via `Promise.all` (Critical Rule #8). The two queries hit the same indexed columns; running them serially doubles the latency on every page load.
+- 2026-05-05 — Backwards-compatible API responses: a list endpoint that previously returned `{ leads: [...] }` shouldn't break tests when paginated. Keep the array key flat and add pagination meta alongside: `{ leads: [...], page, pageSize, total, hasNext }`. Existing E2E tests that assert `body.leads[0]` keep passing.
+- 2026-05-05 — `exactOptionalPropertyTypes: true` rejects passing `undefined` for an optional field. Build the input object incrementally with `if (opts.page !== undefined) paginateOpts.page = opts.page` rather than passing `{ page: opts.page }` (which forces `page: number | undefined`). Annoying but well-understood; the alternative is to weaken the helper's signature, which loses type safety.
+- 2026-05-05 — Server Component pagination via URL `?page=N` (not client-side state) means refresh / back-button / share-link Just Work. Don't reach for `useState` + `fetch` for pagination on Server-rendered list pages — the URL is the source of truth.
+- 2026-05-05 — CSV export needs all matching rows in one shot, not pagination. Dual-purpose handlers stay clean if you document a back-compat `limit` shim that the export route uses (`pageSize: 5000, page: 1` ≈ "give me everything"). Don't fork into `listLeads` + `listAllLeadsForCsv` — one handler, two callers, one paged interface.
+

@@ -26,11 +26,30 @@ async function requireAuthCtx(): Promise<AuthResult> {
   return { ctx, response: null };
 }
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const { ctx, response } = await requireAuthCtx();
   if (ctx === null) return response;
-  const automations = await listAutomations(ctx);
-  return NextResponse.json({ automations });
+
+  const url = new URL(request.url);
+  const page = numParam(url.searchParams.get('page'), 1, 10_000);
+  const pageSize = numParam(url.searchParams.get('pageSize'), 25, 5000);
+
+  const result = await listAutomations(ctx, { page, pageSize });
+  // Spec 020 — keep `automations` as a flat array (backwards-compat
+  // with E2E tests + existing dashboard count); add pagination meta
+  // alongside.
+  return NextResponse.json({
+    automations: result.items,
+    page: result.page,
+    pageSize: result.pageSize,
+    total: result.total,
+    hasNext: result.hasNext,
+  });
+}
+
+function numParam(raw: string | null, fallback: number, max: number): number {
+  if (raw === null || !/^\d+$/.test(raw)) return fallback;
+  return Math.max(1, Math.min(max, Number(raw)));
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

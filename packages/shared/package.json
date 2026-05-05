@@ -11,6 +11,7 @@
     "./db/client": "./src/db/client.ts",
     "./db/repo": "./src/db/repo.ts",
     "./db/schema": "./src/db/schema.ts",
+    "./db/pagination": "./src/db/pagination.ts",
     "./queue/queues": "./src/queue/queues.ts",
     "./queue/jobTypes": "./src/queue/jobTypes.ts",
     "./types/tenant": "./src/types/tenant.ts",

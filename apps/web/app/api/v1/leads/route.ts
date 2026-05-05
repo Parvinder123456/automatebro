@@ -24,16 +24,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const url = new URL(request.url);
   const format = url.searchParams.get('format');
   const igAccountId = url.searchParams.get('igAccountId') ?? undefined;
-  const limitRaw = url.searchParams.get('limit');
-  const limit =
-    limitRaw !== null && /^\d+$/.test(limitRaw) ? Math.min(Number(limitRaw), 5000) : 1000;
 
-  const opts: { limit: number; igAccountId?: string } = { limit };
-  if (igAccountId !== undefined) opts.igAccountId = igAccountId;
-  const leads = await listLeads(ctx, opts);
-
+  // CSV path: fetch all matching leads in one big page (5000 cap matches
+  // pagination MAX_PAGE_SIZE). JSON path: paginate.
   if (format === 'csv') {
-    const body = leadsToCsv(leads);
+    const csvOpts: { pageSize: number; page: number; igAccountId?: string } = {
+      pageSize: 5000,
+      page: 1,
+    };
+    if (igAccountId !== undefined) csvOpts.igAccountId = igAccountId;
+    const result = await listLeads(ctx, csvOpts);
+    const body = leadsToCsv(result.items);
     return new NextResponse(body, {
       status: 200,
       headers: {
@@ -44,5 +45,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   }
 
-  return NextResponse.json({ leads });
+  // Spec 020 — JSON path is paginated. Keep `leads` as a flat array
+  // for backwards-compat; add pagination meta alongside.
+  const page = numParam(url.searchParams.get('page'), 1, 10_000);
+  const pageSize = numParam(url.searchParams.get('pageSize'), 25, 5000);
+  const opts: { page: number; pageSize: number; igAccountId?: string } = { page, pageSize };
+  if (igAccountId !== undefined) opts.igAccountId = igAccountId;
+  const result = await listLeads(ctx, opts);
+
+  return NextResponse.json({
+    leads: result.items,
+    page: result.page,
+    pageSize: result.pageSize,
+    total: result.total,
+    hasNext: result.hasNext,
+  });
+}
+
+function numParam(raw: string | null, fallback: number, max: number): number {
+  if (raw === null || !/^\d+$/.test(raw)) return fallback;
+  return Math.max(1, Math.min(max, Number(raw)));
 }

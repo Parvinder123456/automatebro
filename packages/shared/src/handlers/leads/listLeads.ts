@@ -6,12 +6,19 @@
  * be overkill for 7 columns.
  */
 import type { Ctx } from '../../auth/ctx.js';
-import { repo } from '../../db/repo.js';
+import { type Paginated, paginate } from '../../db/pagination.js';
 import type { Lead } from '../../types/tenant.js';
 
 export interface ListLeadsOptions {
-  limit?: number;
   igAccountId?: string;
+  page?: number;
+  pageSize?: number;
+  /**
+   * Backwards-compat shim for the CSV-export path which passed a flat
+   * `limit`. When set, treated as `pageSize` with `page=1`. Prefer
+   * `page` + `pageSize` for new callers.
+   */
+  limit?: number;
 }
 
 export interface LeadSummary {
@@ -25,14 +32,8 @@ export interface LeadSummary {
   tags: string[];
 }
 
-export async function listLeads(ctx: Ctx, opts: ListLeadsOptions = {}): Promise<LeadSummary[]> {
-  const filter: Record<string, unknown> = {};
-  if (opts.igAccountId !== undefined) filter.igAccountId = opts.igAccountId;
-  const rows = await repo.queryMany<Lead>('leads', filter, ctx, {
-    limit: opts.limit ?? 1000,
-    sort: { lastSeenAt: -1 } as never,
-  });
-  return rows.map((r) => ({
+function toSummary(r: Lead): LeadSummary {
+  return {
     _id: r._id,
     igUserId: r.igUserId,
     igUsername: r.igUsername ?? null,
@@ -41,7 +42,32 @@ export async function listLeads(ctx: Ctx, opts: ListLeadsOptions = {}): Promise<
     firstSeenAt: r.firstSeenAt,
     lastSeenAt: r.lastSeenAt,
     tags: r.tags,
-  }));
+  };
+}
+
+/**
+ * Spec 020 / Phase 2.3 — paginated leads list. Page is 1-indexed.
+ */
+export async function listLeads(
+  ctx: Ctx,
+  opts: ListLeadsOptions = {},
+): Promise<Paginated<LeadSummary>> {
+  const filter: Record<string, unknown> = {};
+  if (opts.igAccountId !== undefined) filter.igAccountId = opts.igAccountId;
+
+  const paginateOpts: Parameters<typeof paginate<Lead>>[3] = { sort: { lastSeenAt: -1 } };
+  if (opts.page !== undefined) paginateOpts.page = opts.page;
+  // Back-compat: if a caller (notably the CSV export) passed `limit`,
+  // honour it as a single big page.
+  const pageSize = opts.pageSize ?? opts.limit;
+  if (pageSize !== undefined) paginateOpts.pageSize = pageSize;
+
+  const result = await paginate<Lead>('leads', filter, ctx, paginateOpts);
+
+  return {
+    ...result,
+    items: result.items.map(toSummary),
+  };
 }
 
 /**

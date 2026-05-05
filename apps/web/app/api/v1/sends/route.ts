@@ -34,16 +34,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const statusParam = url.searchParams.get('status');
   const igAccountId = url.searchParams.get('igAccountId') ?? undefined;
   const automationId = url.searchParams.get('automationId') ?? undefined;
-  const limitRaw = url.searchParams.get('limit');
-  const limit =
-    limitRaw !== null && /^\d+$/.test(limitRaw) ? Math.min(Number(limitRaw), 5000) : undefined;
+  const page = numParam(url.searchParams.get('page'), 1, 10_000);
+  const pageSize = numParam(url.searchParams.get('pageSize'), 25, 5000);
 
-  const opts: Parameters<typeof listSends>[1] = {};
+  const opts: Parameters<typeof listSends>[1] = { page, pageSize };
   if (isStatus(statusParam)) opts.status = statusParam;
   if (igAccountId !== undefined) opts.igAccountId = igAccountId;
   if (automationId !== undefined) opts.automationId = automationId;
-  if (limit !== undefined) opts.limit = limit;
 
-  const sends = await listSends(ctx, opts);
-  return NextResponse.json({ sends });
+  const result = await listSends(ctx, opts);
+  // Spec 020 — keep `sends` as a flat array for backwards-compat;
+  // add pagination meta alongside.
+  return NextResponse.json({
+    sends: result.items,
+    page: result.page,
+    pageSize: result.pageSize,
+    total: result.total,
+    hasNext: result.hasNext,
+  });
+}
+
+function numParam(raw: string | null, fallback: number, max: number): number {
+  if (raw === null || !/^\d+$/.test(raw)) return fallback;
+  return Math.max(1, Math.min(max, Number(raw)));
 }

@@ -16,14 +16,19 @@ export default async function DashboardPage() {
   }
 
   const [automations, accounts, leadCount, sendCount, aiUsage] = await Promise.all([
-    listAutomations(ctx),
+    // Spec 020 — listAutomations now returns Paginated; for the dashboard
+    // counter we just need the page-1 items + total. pageSize=100 so
+    // counters still reflect the full active count up to that limit.
+    listAutomations(ctx, { page: 1, pageSize: 100 }),
     listIgAccounts(ctx),
     countLeads(ctx),
     countSendsLast24h(ctx),
     getAiUsageSummary(ctx, { months: 0 }),
   ]);
 
-  const activeAutomations = automations.filter((a) => a.automation.status === 'active').length;
+  const activeAutomations = automations.items.filter(
+    (a) => a.automation.status === 'active',
+  ).length;
 
   const cards = [
     { label: 'Active automations', value: activeAutomations },

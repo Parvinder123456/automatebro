@@ -78,31 +78,35 @@ describe.skipIf(!hasInfra)('listSends + countSendsLast24h (integration)', () => 
     const sentId = await seedSend(tenantA.tenantId, { status: 'sent', queuedAt: earlier });
     const queuedId = await seedSend(tenantA.tenantId, { status: 'queued', queuedAt: now });
 
-    const rows = await listSends(ctx, {});
+    const result = await listSends(ctx, { pageSize: 1000 });
+    const rows = result.items;
     expect(rows.length).toBeGreaterThanOrEqual(2);
     // newest first — queuedId before sentId
     const queuedIdx = rows.findIndex((r) => r._id === queuedId);
     const sentIdx = rows.findIndex((r) => r._id === sentId);
     expect(queuedIdx).toBeGreaterThanOrEqual(0);
     expect(sentIdx).toBeGreaterThan(queuedIdx);
+    // Spec 020 — pagination meta is present.
+    expect(result.total).toBeGreaterThanOrEqual(2);
+    expect(result.page).toBe(1);
   });
 
   it('S2: listSends ?status filter narrows results', async () => {
     const ctx = ctxFor(tenantA);
-    const failedRows = await listSends(ctx, { status: 'failed' });
+    const failedRows = (await listSends(ctx, { status: 'failed', pageSize: 1000 })).items;
     for (const r of failedRows) {
       expect(r.status).toBe('failed');
     }
     // Sanity: at least one tenant-A failed row in the result if we seed one.
     await seedSend(tenantA.tenantId, { status: 'failed', queuedAt: new Date() });
-    const failedAfter = await listSends(ctx, { status: 'failed' });
+    const failedAfter = (await listSends(ctx, { status: 'failed', pageSize: 1000 })).items;
     expect(failedAfter.length).toBeGreaterThanOrEqual(1);
   });
 
   it('S3: tenant B cannot see tenant A sends', async () => {
     await seedSend(tenantA.tenantId, { status: 'sent', queuedAt: new Date() });
     const ctxB = ctxFor(tenantB);
-    const rows = await listSends(ctxB, {});
+    const rows = (await listSends(ctxB, { pageSize: 1000 })).items;
     // tenantB has its own seeds but never sees tenantA — assert by tenantId
     for (const r of rows) {
       expect(r.tenantId).toBe(tenantB.tenantId);
@@ -120,7 +124,7 @@ describe.skipIf(!hasInfra)('listSends + countSendsLast24h (integration)', () => 
     expect(recent).toBeGreaterThanOrEqual(1);
 
     // Strict assertion: count - rows-older-than-24h should equal recent.
-    const all = await listSends(ctx, { limit: 5000 });
+    const all = (await listSends(ctx, { pageSize: 5000 })).items;
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const recentInAll = all.filter((r) => new Date(r.queuedAt) >= cutoff).length;
     expect(recent).toBe(recentInAll);
