@@ -1,8 +1,10 @@
+import { getAiUsageSummary } from '@automatebro/shared/handlers/aiUsage/getAiUsageSummary';
 import { listAutomations } from '@automatebro/shared/handlers/automations/listAutomations';
 import { listIgAccounts } from '@automatebro/shared/handlers/igAccounts/listIgAccounts';
 import { countLeads } from '@automatebro/shared/handlers/leads/countLeads';
 import { countSendsLast24h } from '@automatebro/shared/handlers/sends/countSendsLast24h';
 import { redirect } from 'next/navigation';
+import { AiUsageCard } from '../../../../components/dashboard/ai-usage-card';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'Dashboard — AutomateBro' };
@@ -13,11 +15,12 @@ export default async function DashboardPage() {
     redirect('/onboarding');
   }
 
-  const [automations, accounts, leadCount, sendCount] = await Promise.all([
+  const [automations, accounts, leadCount, sendCount, aiUsage] = await Promise.all([
     listAutomations(ctx),
     listIgAccounts(ctx),
     countLeads(ctx),
     countSendsLast24h(ctx),
+    getAiUsageSummary(ctx, { months: 0 }),
   ]);
 
   const activeAutomations = automations.filter((a) => a.automation.status === 'active').length;
@@ -39,6 +42,10 @@ export default async function DashboardPage() {
             <div className="mt-1 text-2xl font-bold">{c.value}</div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <AiUsageCard summary={aiUsage} />
       </div>
     </div>
   );

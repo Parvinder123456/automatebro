@@ -60,6 +60,19 @@ export default async function SettingsPage() {
         </dl>
       </section>
 
+      <section className="mb-8 rounded border bg-white p-5" data-testid="ai-usage-link-section">
+        <h2 className="text-lg font-semibold">AI usage</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          See how much of your monthly AI cap you've used and a 6-month history.
+        </p>
+        <a
+          href="/app/settings/ai-usage"
+          className="mt-3 inline-block rounded border px-4 py-2 text-sm hover:bg-gray-50"
+        >
+          View AI usage →
+        </a>
+      </section>
+
       <PrivacyPanel workspaceName={workspaceName} />
     </main>
   );

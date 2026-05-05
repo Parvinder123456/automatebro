@@ -42,7 +42,7 @@
 | # | Item | Status | Notes |
 |---|---|---|---|
 | 2.1 | Razorpay billing | ❌ KYC blocked | Spec 010 — checkout, subscription webhook, plan-tier enforcement, dunning. |
-| 2.2 | AI usage dashboard | ❌ pending | `aiUsage` data already exists; just needs UI. ~½ day. |
+| 2.2 | AI usage dashboard | 🟡 in flight (`feat/phase2-2-ai-usage-dashboard`) | Spec 019 — `getAiUsageSummary` handler, `GET /api/v1/aiUsage`, dashboard summary card + full `/app/settings/ai-usage` page with 6-month history. INR formatting uses Indian-locale grouping (1,00,000). |
 | 2.3 | Pagination + sortable tables | ❌ pending | Automations, leads, sends. Currently fixed limit (100 / 1000 / 1000). |
 
 ### Phase 3 — Differentiation
