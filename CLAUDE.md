@@ -3,8 +3,12 @@
 > Based on Claude Code Mastery Guides V1-V5 by TheDecipherist
 > https://github.com/TheDecipherist/claude-code-mastery
 
-> **New here?** When starting a fresh session in this project, greet the user:
-> "Welcome to the Claude Code Mastery Project Starter Kit! Use `/help` to see all 26 commands or `/show-user-guide` for the full interactive guide."
+> **New here?** When starting a fresh session in this project, before doing anything else:
+> 1. Read **`docs/TODO_BUILD.md`** to see what's shipped, what's in flight, and what's blocked.
+> 2. Read the **"Resuming work in a fresh Claude session"** section in the AutomateBro project block below (line ~940).
+> 3. Then greet the user with a 1–2 line summary: "Master is at `<short-sha>`, last shipped: <feature>, next unblocked: <Phase X.Y>. Want me to <propose plan> or pick something else?"
+>
+> Don't propose work without grounding in `docs/TODO_BUILD.md` — `git log` and that doc together are the source of truth for state.
 
 ---
 
@@ -936,6 +940,46 @@ Don't just fix bugs — fix the rules that allowed the bug. Every mistake is a m
 > **This is a project-specific section. The rules above (Critical Rules, Quality Gates,
 > Git Workflow, StrictDB, Testing, Service Ports, etc.) all still apply. This section
 > adds context and constraints specific to AutomateBro on top of them.**
+
+## Resuming work in a fresh Claude session — READ THIS FIRST
+
+If you're starting a new chat and the user's request is "build the next feature" or
+"continue where we left off" or anything that needs to know **what's already shipped
+vs what's pending**, the answer is in **`docs/TODO_BUILD.md`** — that file is the
+single source of truth for project state.
+
+**Read these four files at the start of any non-trivial session, in this order:**
+
+1. `docs/TODO_BUILD.md` — what's shipped (live on master), what's in flight, what's
+   pending. Phase numbers, branch references, blocker notes. Always start here.
+2. `docs/engineering-plan.md` — the v1 contract (locked at project start). Tells you
+   what we DO and DON'T build, the tech stack, scaling assumptions, and the spec
+   sequence we follow. Override only with explicit user permission.
+3. `docs/specs/NNN-<slug>.md` — per-feature spec docs. Read the relevant one(s)
+   before writing code that touches an existing feature, and write a new one
+   (numbered after the latest existing) before building anything new.
+4. The "Lessons learned" section at the end of THIS file (CLAUDE.md) — every spec
+   has appended pattern decisions and gotchas. Saves you from rediscovering bugs.
+
+**Where state lives, what to update when:**
+
+| Doc | Mutability | When to update |
+|---|---|---|
+| `CLAUDE.md` (this file) | Stable rules + append-only lessons | Add a "Lessons learned" entry per shipped spec; bump rules only when the team agrees |
+| `docs/TODO_BUILD.md` | Mutable status table | Move items from "pending" → "in flight" → "live on master" as you ship |
+| `docs/engineering-plan.md` | Locked | Only on explicit scope change |
+| `docs/specs/NNN-*.md` | Append-only | Write before code; never edit a shipped spec retroactively |
+
+**The two most common "where do I start?" answers:**
+- "Build the next feature" → check TODO_BUILD.md, find the highest-priority unblocked
+  item, propose 2–3 lines of approach, branch, build, smoke gate, commit, merge.
+- "Fix a bug in feature X" → grep `docs/specs/` for the spec that introduced X, read
+  it + its CLAUDE.md lessons, then start.
+
+If TODO_BUILD.md disagrees with what `git log` says is on master, **trust git**
+and update TODO_BUILD.md. The doc drifts; the code doesn't.
+
+---
 
 ## What we're building
 
