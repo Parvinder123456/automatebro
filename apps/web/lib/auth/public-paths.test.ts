@@ -51,6 +51,18 @@ describe('apps/web/lib/auth/public-paths.ts', () => {
     expect(isPublicPath('/compare/linkplease')).toBe(true);
   });
 
+  it('U7c: marketing legal pages are public (spec 012/013)', () => {
+    expect(isPublicPath('/pricing')).toBe(true);
+    expect(isPublicPath('/privacy')).toBe(true);
+    expect(isPublicPath('/terms')).toBe(true);
+    expect(isPublicPath('/dpa')).toBe(true);
+    expect(isPublicPath('/deleted')).toBe(true);
+  });
+
+  it('U7d: settings page is NOT public', () => {
+    expect(isPublicPath('/app/settings')).toBe(false);
+  });
+
   it('shouldSkipSession: webhooks + health skip cookie work', () => {
     expect(shouldSkipSession('/api/v1/webhooks/meta')).toBe(true);
     expect(shouldSkipSession('/api/v1/health')).toBe(true);

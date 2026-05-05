@@ -30,6 +30,13 @@ export interface Ctx {
   /** null while the user is in onboarding. */
   role: Role | null;
   email: string;
+  /**
+   * Spec 013 — true when the user has a tenantUsers row but the tenant
+   * has `deletedAt !== null`. The (app) layout uses this to send the
+   * user to /deleted instead of /onboarding (both have tenantId === null
+   * but the UX is different: pre-tenant vs post-deletion).
+   */
+  tenantDeleted: boolean;
 }
 
 export interface SupabaseAuthUser {
@@ -41,6 +48,11 @@ export interface SupabaseAuthUser {
 interface TenantUserRow {
   tenantId: string;
   role: Role;
+}
+
+interface TenantStatusRow {
+  _id: string;
+  deletedAt: Date | null;
 }
 
 /**
@@ -81,11 +93,31 @@ export async function buildCtx(user: SupabaseAuthUser, db: StrictDB): Promise<Ct
     userId: user.id,
   } as never);
 
+  // Spec 013 — soft-deleted tenants are invisible to their users. We
+  // join to `tenants` and treat `deletedAt !== null` as "no tenant"
+  // so the user is bounced to /deleted by the (app) layout. Until the
+  // 30-day hard-delete cron fires (spec 014), the tenantUsers row
+  // sticks around so an operator can un-delete via direct DB access.
+  let tenantId: string | null = tu?.tenantId ?? null;
+  let role: Role | null = tu?.role ?? null;
+  let tenantDeleted = false;
+  if (tu !== null && tu.tenantId !== undefined) {
+    const tenant = await db.queryOne<TenantStatusRow>('tenants', {
+      _id: tu.tenantId,
+    } as never);
+    if (tenant === null || (tenant.deletedAt !== null && tenant.deletedAt !== undefined)) {
+      tenantId = null;
+      role = null;
+      tenantDeleted = tenant !== null;
+    }
+  }
+
   return {
     userId: user.id,
-    tenantId: tu?.tenantId ?? null,
-    role: tu?.role ?? null,
+    tenantId,
+    role,
     email,
+    tenantDeleted,
   };
 }
 

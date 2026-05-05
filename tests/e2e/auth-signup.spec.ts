@@ -33,8 +33,11 @@ test.describe('signup happy path (integration)', () => {
 
     // 1. signup
     await page.goto('/signup');
+    await expect(page.getByTestId('signup-form')).toHaveAttribute('data-hydrated', 'true');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Password').fill(password);
+    // Spec 013 — Terms / Privacy consent gate.
+    await page.getByTestId('signup-consent').check();
     await page.getByTestId('signup-submit').click();
 
     // 2. lands on /verify

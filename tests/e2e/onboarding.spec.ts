@@ -81,6 +81,8 @@ test.describe('onboarding flow (integration)', () => {
     // Fill form
     const workspaceName = `Test Studio ${Date.now()}`;
     await page.getByLabel('Workspace name').fill(workspaceName);
+    // Spec 013 — DPDP processing-consent checkbox is required before submit.
+    await page.getByTestId('workspace-processing-consent').check();
     await page.getByTestId('workspace-submit').click();
 
     // Lands on /app/dashboard with workspace name visible
@@ -122,6 +124,7 @@ test.describe('onboarding flow (integration)', () => {
     await expect(page.getByTestId('workspace-form')).toHaveAttribute('data-hydrated', 'true');
 
     await page.getByLabel('Workspace name').fill('Test Studio EO3');
+    await page.getByTestId('workspace-processing-consent').check();
     await page.getByTestId('workspace-submit').click();
     await page.waitForURL(/\/app\/dashboard$/, {
       timeout: 30_000,

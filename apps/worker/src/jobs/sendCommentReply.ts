@@ -20,7 +20,9 @@ export async function sendCommentReply(data: SendCommentReplyJobType, job: Job):
     await db.updateOne(
       'sends',
       { _id: data.sendId } as never,
-      { $set: { status: 'failed', errorMessage: 'igAccount not found', failedAt: new Date() } } as never,
+      {
+        $set: { status: 'failed', errorMessage: 'igAccount not found', failedAt: new Date() },
+      } as never,
     );
     logger.warn({ jobId: job.id, sendId: data.sendId }, 'sendCommentReply: igAccount not found');
     return;
@@ -78,9 +80,6 @@ export async function sendCommentReply(data: SendCommentReplyJobType, job: Job):
       { _id: data.sendId } as never,
       { $set: { status: 'failed', errorMessage: message, failedAt: new Date() } } as never,
     );
-    logger.error(
-      { jobId: job.id, sendId: data.sendId, err: message },
-      'sendCommentReply: failed',
-    );
+    logger.error({ jobId: job.id, sendId: data.sendId, err: message }, 'sendCommentReply: failed');
   }
 }

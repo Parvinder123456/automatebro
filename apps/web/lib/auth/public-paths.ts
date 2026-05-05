@@ -16,6 +16,10 @@ const PUBLIC_EXACT = new Set<string>([
   '/reset-password',
   '/verify',
   '/pricing',
+  '/privacy',
+  '/terms',
+  '/dpa',
+  '/deleted',
   '/api/v1/health',
 ]);
 

@@ -142,7 +142,10 @@ async function cleanup(userId: string): Promise<void> {
   }).catch(() => undefined);
 }
 
-async function loginAndGoToDashboard(page: import('@playwright/test').Page, user: TestUser): Promise<void> {
+async function loginAndGoToDashboard(
+  page: import('@playwright/test').Page,
+  user: TestUser,
+): Promise<void> {
   await page.goto('/login');
   await page.waitForLoadState('networkidle');
   await page.getByLabel('Email').fill(user.email);

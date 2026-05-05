@@ -40,6 +40,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const onOnboarding = pathname === '/onboarding';
   const hasTenant = ctx.tenantId !== null;
 
+  // Spec 013 — soft-deleted tenants land on /deleted instead of
+  // /onboarding. ctx.tenantDeleted distinguishes the two null-tenant
+  // states (pre-tenant onboarding vs post-deletion).
+  if (!hasTenant && ctx.tenantDeleted) {
+    redirect('/deleted');
+  }
   if (!hasTenant && !onOnboarding) {
     redirect('/onboarding');
   }
@@ -55,9 +61,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // /app/* gets the sidebar shell. Look up workspace name once for the header.
   const db = await getDb();
   const tenant =
-    ctx.tenantId !== null
-      ? await db.queryOne<Tenant>('tenants', { _id: ctx.tenantId })
-      : null;
+    ctx.tenantId !== null ? await db.queryOne<Tenant>('tenants', { _id: ctx.tenantId }) : null;
   const workspaceName = tenant?.name ?? 'Workspace';
 
   return (

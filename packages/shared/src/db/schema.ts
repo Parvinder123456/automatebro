@@ -21,6 +21,12 @@ export const TenantSchema = z.object({
   dpdpConsentAt: z.date().nullable().optional(),
   createdAt: z.date(),
   deletedAt: z.date().nullable().optional(),
+  // Spec 013 — when the workspace owner clicked "Delete workspace".
+  // Same timestamp as `deletedAt` at the moment of the request; preserved
+  // separately so an operator un-delete (clearing `deletedAt`) doesn't
+  // erase the original request time. Hard-delete cron (spec 014) reads
+  // this to compute the 30-day grace period.
+  deletionRequestedAt: z.date().nullable().optional(),
 });
 
 export const UserSchema = z.object({

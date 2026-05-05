@@ -1,7 +1,7 @@
 import { listIgAccounts } from '@automatebro/shared/handlers/igAccounts/listIgAccounts';
 import { redirect } from 'next/navigation';
-import { getCtx } from '../../../../../lib/auth/get-ctx';
 import { AutomationForm } from '../../../../../components/automations/automation-form';
+import { getCtx } from '../../../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'New Automation — AutomateBro' };
 

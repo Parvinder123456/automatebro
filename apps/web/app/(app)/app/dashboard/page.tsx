@@ -1,7 +1,7 @@
-import { countLeads } from '@automatebro/shared/handlers/leads/countLeads';
-import { countSendsLast24h } from '@automatebro/shared/handlers/sends/countSendsLast24h';
 import { listAutomations } from '@automatebro/shared/handlers/automations/listAutomations';
 import { listIgAccounts } from '@automatebro/shared/handlers/igAccounts/listIgAccounts';
+import { countLeads } from '@automatebro/shared/handlers/leads/countLeads';
+import { countSendsLast24h } from '@automatebro/shared/handlers/sends/countSendsLast24h';
 import { redirect } from 'next/navigation';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 

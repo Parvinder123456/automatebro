@@ -19,6 +19,10 @@ import type { Tenant, TenantUser } from '../../types/tenant.js';
 
 export const CreateTenantInput = z.object({
   name: z.string().trim().min(1).max(120),
+  // Spec 013 §3.1 — DPDP-aligned processing consent. The workspace
+  // form's checkbox literally posts `processingConsent: true`. Anything
+  // else (false, missing, "yes", 1) is rejected at the API boundary.
+  processingConsent: z.literal(true),
 });
 
 export type CreateTenantInputType = z.infer<typeof CreateTenantInput>;

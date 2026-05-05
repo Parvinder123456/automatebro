@@ -19,6 +19,7 @@ const LINKS: NavLink[] = [
   { href: '/app/leads', label: 'Leads' },
   { href: '/app/sends', label: 'Sends' },
   { href: '/app/integrations', label: 'Integrations' },
+  { href: '/app/settings', label: 'Settings' },
 ];
 
 function isActive(pathname: string, href: string): boolean {

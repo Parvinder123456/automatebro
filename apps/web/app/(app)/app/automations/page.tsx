@@ -1,8 +1,8 @@
 import { listAutomations } from '@automatebro/shared/handlers/automations/listAutomations';
 import { redirect } from 'next/navigation';
-import { getCtx } from '../../../../lib/auth/get-ctx';
 import { RowActions } from '../../../../components/automations/row-actions';
 import { StatusBadge } from '../../../../components/automations/status-badge';
+import { getCtx } from '../../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'Automations — AutomateBro' };
 

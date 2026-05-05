@@ -22,8 +22,8 @@ import { closeQueue, connection } from '@automatebro/shared/queue/queues';
 import { type Job, Worker } from 'bullmq';
 import { generateAiReply } from './jobs/generateAiReply.js';
 import { processEvent } from './jobs/processEvent.js';
-import { sendDM } from './jobs/sendDM.js';
 import { sendCommentReply } from './jobs/sendCommentReply.js';
+import { sendDM } from './jobs/sendDM.js';
 
 const HEARTBEAT_KEY = 'worker:heartbeat';
 const HEARTBEAT_INTERVAL_MS = 30_000;

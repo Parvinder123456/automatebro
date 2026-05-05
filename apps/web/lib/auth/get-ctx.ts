@@ -1,3 +1,5 @@
+import { getCtxFromUser } from '@automatebro/shared/auth/ctx';
+import type { Ctx } from '@automatebro/shared/auth/ctx';
 /**
  * Spec 003 — server-side ctx retrieval for Server Components and
  * Route Handlers.
@@ -8,8 +10,6 @@
  * in shared.
  */
 import { cache } from 'react';
-import { getCtxFromUser } from '@automatebro/shared/auth/ctx';
-import type { Ctx } from '@automatebro/shared/auth/ctx';
 import { createSupabaseServerClient } from '../supabase/server';
 
 export const getCtx = cache(async (): Promise<Ctx | null> => {

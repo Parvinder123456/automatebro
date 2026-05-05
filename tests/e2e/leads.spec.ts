@@ -125,7 +125,7 @@ test.describe('leads endpoint (integration)', () => {
     user = null;
   });
 
-  test('L1: GET /api/v1/leads returns the tenant\'s leads', async ({ page }) => {
+  test("L1: GET /api/v1/leads returns the tenant's leads", async ({ page }) => {
     if (!user) throw new Error('setup');
     await setupTenantWithLeads(user.userId, 3);
 

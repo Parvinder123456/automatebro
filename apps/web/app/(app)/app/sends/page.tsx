@@ -1,7 +1,7 @@
 import { listSends } from '@automatebro/shared/handlers/sends/listSends';
 import { redirect } from 'next/navigation';
-import { getCtx } from '../../../../lib/auth/get-ctx';
 import { StatusFilter } from '../../../../components/sends/status-filter';
+import { getCtx } from '../../../../lib/auth/get-ctx';
 
 export const metadata = { title: 'Sends — AutomateBro' };
 

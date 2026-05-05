@@ -39,7 +39,9 @@
     "./handlers/leads/listLeads": "./src/handlers/leads/listLeads.ts",
     "./handlers/leads/countLeads": "./src/handlers/leads/countLeads.ts",
     "./handlers/sends/listSends": "./src/handlers/sends/listSends.ts",
-    "./handlers/sends/countSendsLast24h": "./src/handlers/sends/countSendsLast24h.ts"
+    "./handlers/sends/countSendsLast24h": "./src/handlers/sends/countSendsLast24h.ts",
+    "./handlers/privacy/exportTenantData": "./src/handlers/privacy/exportTenantData.ts",
+    "./handlers/privacy/requestTenantDeletion": "./src/handlers/privacy/requestTenantDeletion.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

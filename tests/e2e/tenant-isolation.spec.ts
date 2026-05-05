@@ -68,6 +68,7 @@ test.describe('tenant isolation (integration)', () => {
       });
       await expect(pageA.getByTestId('workspace-form')).toHaveAttribute('data-hydrated', 'true');
       await pageA.getByLabel('Workspace name').fill('Workspace A');
+      await pageA.getByTestId('workspace-processing-consent').check();
       await pageA.getByTestId('workspace-submit').click();
       await pageA.waitForURL(/\/app\/dashboard$/, {
         timeout: 30_000,
@@ -86,6 +87,7 @@ test.describe('tenant isolation (integration)', () => {
       });
       await expect(pageB.getByTestId('workspace-form')).toHaveAttribute('data-hydrated', 'true');
       await pageB.getByLabel('Workspace name').fill('Workspace B');
+      await pageB.getByTestId('workspace-processing-consent').check();
       await pageB.getByTestId('workspace-submit').click();
       await pageB.waitForURL(/\/app\/dashboard$/, {
         timeout: 30_000,
@@ -135,6 +137,7 @@ test.describe('tenant isolation (integration)', () => {
 
       // First POST succeeds via the form.
       await page.getByLabel('Workspace name').fill('First Workspace');
+      await page.getByTestId('workspace-processing-consent').check();
       await page.getByTestId('workspace-submit').click();
       await page.waitForURL(/\/app\/dashboard$/, {
         timeout: 30_000,
@@ -142,8 +145,11 @@ test.describe('tenant isolation (integration)', () => {
       });
 
       // Second POST via raw fetch — should 409.
+      // Spec 013 §3.1 requires processingConsent: true on every workspace
+      // create; we send it so we exercise the duplicate-tenant path
+      // rather than the consent-validation path.
       const second = await page.request.post('/api/v1/tenants', {
-        data: { name: 'Second Workspace' },
+        data: { name: 'Second Workspace', processingConsent: true },
       });
       expect(second.status()).toBe(409);
       const body = await second.json();

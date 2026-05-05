@@ -1,5 +1,5 @@
-import type { NextConfig } from 'next';
 import { resolve } from 'node:path';
+import type { NextConfig } from 'next';
 
 // Load root .env into process.env using Node.js 20.12+ built-in.
 // Next.js runs next.config.ts in Node context before its own env loader,

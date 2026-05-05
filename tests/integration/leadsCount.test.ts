@@ -16,7 +16,13 @@ const hasInfra = Boolean(
 );
 
 function ctxFor(t: TestTenantFixture): Ctx {
-  return { userId: t.userId, tenantId: t.tenantId, role: 'owner', email: t.email };
+  return {
+    userId: t.userId,
+    tenantId: t.tenantId,
+    role: 'owner',
+    email: t.email,
+    tenantDeleted: false,
+  };
 }
 
 async function seedIgAccount(tenantId: string): Promise<string> {

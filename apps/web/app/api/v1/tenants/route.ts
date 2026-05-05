@@ -36,11 +36,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   const parsed = CreateTenantInput.safeParse(body);
   if (!parsed.success) {
+    // Tighten the message when the failure is the consent literal — it's
+    // a common bot-attack vector to skip checkboxes, and we want the
+    // operator-facing log to be specific.
+    const flat = parsed.error.flatten();
+    const consentError = flat.fieldErrors.processingConsent !== undefined;
     return NextResponse.json(
       {
         error: 'validation',
-        message: 'Workspace name is required (1–120 chars).',
-        issues: parsed.error.flatten(),
+        message: consentError
+          ? 'Processing consent is required.'
+          : 'Workspace name is required (1–120 chars).',
+        issues: flat,
       },
       { status: 400 },
     );

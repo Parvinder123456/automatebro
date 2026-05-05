@@ -12,7 +12,9 @@ test.describe('public routes (no auth)', () => {
     expect(response.status()).toBe(200);
     const html = await response.text();
     expect(html).toContain('AutomateBro');
-    expect(html).toContain('Create account');
+    // Spec 012 marketing site — header CTA + hero CTA copy.
+    expect(html).toContain('Sign up');
+    expect(html).toContain('Start free');
   });
 
   test('E6b: GET /signup returns 200 and renders the form', async ({ page }) => {

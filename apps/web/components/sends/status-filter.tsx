@@ -15,7 +15,11 @@ export function StatusFilter({ current }: { current?: string | undefined }) {
           href={`/app/sends?status=${s}`}
           className={`rounded px-3 py-1 ${current === s ? 'bg-black text-white' : 'border'}`}
         >
-          {s === 'rateLimited' ? 'Rate Limited' : s === 'outsideWindow' ? 'Outside Window' : s.charAt(0).toUpperCase() + s.slice(1)}
+          {s === 'rateLimited'
+            ? 'Rate Limited'
+            : s === 'outsideWindow'
+              ? 'Outside Window'
+              : s.charAt(0).toUpperCase() + s.slice(1)}
         </a>
       ))}
     </nav>

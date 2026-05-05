@@ -30,29 +30,25 @@ export async function refreshSession(request: NextRequest): Promise<SessionRefre
   forwardedHeaders.set('x-pathname', request.nextUrl.pathname);
 
   let response = NextResponse.next({ request: { headers: forwardedHeaders } });
-  const supabase = createServerClient(
-    PublicEnv.SUPABASE_URL,
-    PublicEnv.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          // Mutate the request cookies so any downstream middleware
-          // sees the refreshed session, then rebuild the response with
-          // updated cookies.
-          for (const { name, value } of cookiesToSet) {
-            request.cookies.set(name, value);
-          }
-          response = NextResponse.next({ request: { headers: forwardedHeaders } });
-          for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set(name, value, options);
-          }
-        },
+  const supabase = createServerClient(PublicEnv.SUPABASE_URL, PublicEnv.SUPABASE_ANON_KEY, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        // Mutate the request cookies so any downstream middleware
+        // sees the refreshed session, then rebuild the response with
+        // updated cookies.
+        for (const { name, value } of cookiesToSet) {
+          request.cookies.set(name, value);
+        }
+        response = NextResponse.next({ request: { headers: forwardedHeaders } });
+        for (const { name, value, options } of cookiesToSet) {
+          response.cookies.set(name, value, options);
+        }
       },
     },
-  );
+  });
 
   // getUser() (not getSession()) does a server-side validation of the
   // JWT — required for security per Supabase docs.

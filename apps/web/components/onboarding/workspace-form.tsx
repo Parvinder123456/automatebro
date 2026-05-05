@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
  */
 export function WorkspaceForm() {
   const [name, setName] = useState('');
+  const [processingConsent, setProcessingConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -23,6 +24,10 @@ export function WorkspaceForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (submittingRef.current) return;
+    if (!processingConsent) {
+      setError('Please confirm you have authority to process Instagram audience data.');
+      return;
+    }
     submittingRef.current = true;
     setError(null);
     setSubmitting(true);
@@ -32,7 +37,7 @@ export function WorkspaceForm() {
       response = await fetch('/api/v1/tenants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim() }),
+        body: JSON.stringify({ name: name.trim(), processingConsent: true }),
       });
     } catch (err) {
       submittingRef.current = false;
@@ -79,6 +84,21 @@ export function WorkspaceForm() {
         />
         <p className="mt-1 text-xs text-gray-500">You can change this later in Settings.</p>
       </div>
+      <label className="flex items-start gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          required
+          checked={processingConsent}
+          onChange={(e) => setProcessingConsent(e.target.checked)}
+          className="mt-1"
+          data-testid="workspace-processing-consent"
+        />
+        <span>
+          I confirm I have the authority to process personal data (Instagram handles, emails, phone
+          numbers) of users who interact with my connected Instagram accounts via AutomateBro
+          automations. I&apos;ll comply with India&apos;s DPDP Act and applicable privacy laws.
+        </span>
+      </label>
       {error !== null && (
         <p className="text-sm text-red-600" data-testid="workspace-error">
           {error}
@@ -86,7 +106,7 @@ export function WorkspaceForm() {
       )}
       <button
         type="submit"
-        disabled={submitting || !hydrated}
+        disabled={submitting || !hydrated || !processingConsent}
         className="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50"
         data-testid="workspace-submit"
       >
