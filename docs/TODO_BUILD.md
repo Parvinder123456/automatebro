@@ -56,7 +56,7 @@
 | # | Item | Status | Notes |
 |---|---|---|---|
 | 3.1 | AI follow-up sequences | ❌ depends on 2.1 + 2.4 | Drip DMs N hours after no-reply. Needs scheduled-job cron (spec 014). |
-| 3.2 | Multilingual replies (Hindi + English) | ❌ pending | Detect commenter language; gpt-4o-mini handles both natively. ~1 prompt-engineering pass. |
+| 3.2 | Multilingual replies (Hindi + English + Hinglish) | ✅ live on master | Spec 021 — system-prompt instruction "reply in SAME language as user". Auto-detects English / Devanagari Hindi / Hinglish; falls back to English for other languages. Snapshot-tested. |
 | 3.3 | Webhook-out integration | ❌ pending | Forward leads / sends to tenant's own endpoint with HMAC-signed payloads. |
 | 3.4 | Mailchimp lead push | ❌ pending | OAuth + list-add. |
 | 3.5 | Google Sheets append | ❌ pending | OAuth + append-row. |

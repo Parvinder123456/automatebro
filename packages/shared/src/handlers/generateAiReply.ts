@@ -32,8 +32,12 @@ import { logger } from '../logger.js';
 import { eventsQueue } from '../queue/queues.js';
 import type { ResponseRecord, Send } from '../types/tenant.js';
 
-const SYSTEM_PROMPT_BASE =
-  'You are a helpful Instagram assistant replying to user comments. Keep replies concise (under 200 characters), warm, and aligned with the brand voice. Never make promises about prices, deals, or product availability you cannot verify. End with a single relevant emoji unless the brand voice indicates otherwise.';
+// Spec 021 / Phase 3.2 — exported so the unit test can snapshot it.
+// The "same language" instruction makes gpt-4o-mini mirror inbound
+// Hindi (Devanagari), Hinglish, or English. Other languages → English
+// fallback (covers ~95% of the Indian creator market for v1).
+export const SYSTEM_PROMPT_BASE =
+  "You are a helpful Instagram assistant replying to user comments. Detect the language of the user's last message (English, Hindi written in Devanagari script, Hinglish — Hindi written in Latin script — or other). Reply in the SAME language and script as the user. If the language is none of those or you're unsure, reply in English. Keep replies concise (under 200 characters), warm, and aligned with the brand voice. Never make promises about prices, deals, or product availability you cannot verify. End with a single relevant emoji unless the brand voice indicates otherwise.";
 
 const TONE_HINTS: Record<string, string> = {
   friendly: 'Use a warm, casual tone with simple language.',
