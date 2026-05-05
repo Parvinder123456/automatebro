@@ -220,6 +220,89 @@ export async function replyToComment(args: {
   return { commentId: body.id ?? '' };
 }
 
+// ---------- Spec 017 / Phase 1.3: media listing for the post picker ----------
+
+export interface MetaMedia {
+  id: string;
+  mediaType: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM' | 'REELS' | 'STORY' | 'OTHER';
+  permalink: string | null;
+  thumbnailUrl: string | null;
+  mediaUrl: string | null;
+  caption: string | null;
+  timestamp: string | null;
+}
+
+export interface FetchUserMediaResult {
+  media: MetaMedia[];
+  /** Cursor for the next page (opaque to us — pass back as `?after=...`). */
+  next: string | null;
+}
+
+/**
+ * List a user's IG media items via the Graph API.
+ *
+ * Endpoint: GET /{igUserId}/media?fields=id,media_type,permalink,thumbnail_url,media_url,caption,timestamp&limit=N
+ *
+ * - `thumbnailUrl` is set for VIDEO/REELS; `mediaUrl` is set for IMAGE.
+ * - For CAROUSEL_ALBUM, Meta returns the cover image URL on `media_url`.
+ * - Stories don't appear here (they have their own endpoint and 24h TTL);
+ *   the post picker is for grid posts + reels only.
+ */
+export async function fetchUserMedia(args: {
+  igUserId: string;
+  accessToken: string;
+  limit?: number;
+  after?: string | null;
+}): Promise<FetchUserMediaResult> {
+  const url = new URL(`${GRAPH_API_BASE}/${args.igUserId}/media`);
+  url.searchParams.set(
+    'fields',
+    'id,media_type,permalink,thumbnail_url,media_url,caption,timestamp',
+  );
+  url.searchParams.set('limit', String(args.limit ?? 50));
+  url.searchParams.set('access_token', args.accessToken);
+  if (args.after !== undefined && args.after !== null && args.after !== '') {
+    url.searchParams.set('after', args.after);
+  }
+  const body = (await metaFetch(url.toString())) as {
+    data?: Array<{
+      id: string;
+      media_type?: string;
+      permalink?: string;
+      thumbnail_url?: string;
+      media_url?: string;
+      caption?: string;
+      timestamp?: string;
+    }>;
+    paging?: { cursors?: { after?: string }; next?: string };
+  };
+  const media: MetaMedia[] = (body.data ?? []).map((m) => {
+    const rawType = (m.media_type ?? '').toUpperCase();
+    const mediaType =
+      rawType === 'IMAGE' ||
+      rawType === 'VIDEO' ||
+      rawType === 'CAROUSEL_ALBUM' ||
+      rawType === 'REELS' ||
+      rawType === 'STORY'
+        ? (rawType as MetaMedia['mediaType'])
+        : 'OTHER';
+    return {
+      id: m.id,
+      mediaType,
+      permalink: m.permalink ?? null,
+      thumbnailUrl: m.thumbnail_url ?? null,
+      mediaUrl: m.media_url ?? null,
+      caption: m.caption ?? null,
+      timestamp: m.timestamp ?? null,
+    };
+  });
+  // Meta returns BOTH `paging.next` (full URL) AND `paging.cursors.after`
+  // (just the cursor). We stick with the cursor — it's stable and our
+  // route handler reconstructs the URL itself.
+  const next = body.paging?.next ? (body.paging.cursors?.after ?? null) : null;
+  return { media, next };
+}
+
 /**
  * Build the OAuth authorization URL the browser should be redirected
  * to. Caller appends `state` and `redirect_uri`.

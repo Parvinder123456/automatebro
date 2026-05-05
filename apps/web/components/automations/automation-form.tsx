@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { PostPicker } from './post-picker';
 
 interface IgAccountOption {
   _id: string;
@@ -30,6 +31,10 @@ export function AutomationForm({
   const [trigger, setTrigger] = useState<TriggerType>('comment');
   // Spec 016 — optional intent gate. Empty set = "any intent" (default).
   const [selectedIntents, setSelectedIntents] = useState<Set<IntentLabel>>(new Set());
+  // Phase 1.3 / spec 017 — controlled state for the post picker.
+  // Empty array = "all posts" (default; matches triggers.postIds = null).
+  const [igAccountId, setIgAccountId] = useState<string>(igAccounts[0]?._id ?? '');
+  const [selectedPostIds, setSelectedPostIds] = useState<string[]>([]);
   const submittingRef = useRef(false);
 
   function toggleIntent(label: IntentLabel): void {
@@ -59,7 +64,7 @@ export function AutomationForm({
 
     const intentList = Array.from(selectedIntents);
     const body = {
-      igAccountId: fd.get('igAccountId') as string,
+      igAccountId,
       name: fd.get('name') as string,
       // Spec 015 — explicitly send trigger; the API still defaults to
       // 'comment' if absent (backwards compat) but every new automation
@@ -69,6 +74,10 @@ export function AutomationForm({
       // Spec 016 — only send intents when at least one is selected;
       // otherwise leave it null/undefined so the trigger is "any intent".
       ...(intentList.length > 0 ? { intents: intentList } : {}),
+      // Phase 1.3 / spec 017 — only send postIds when comment-trigger
+      // AND at least one selected. DM-trigger ignores postIds in the
+      // worker even if set.
+      ...(trigger === 'comment' && selectedPostIds.length > 0 ? { postIds: selectedPostIds } : {}),
       response: {
         mode: 'static' as const,
         template: fd.get('template') as string,
@@ -116,6 +125,14 @@ export function AutomationForm({
           id="igAccountId"
           name="igAccountId"
           required
+          value={igAccountId}
+          onChange={(e) => {
+            setIgAccountId(e.target.value);
+            // Selected posts belong to the previous account; clear them
+            // so the tenant doesn't accidentally tie an automation to
+            // post IDs from a different IG account.
+            setSelectedPostIds([]);
+          }}
           className="mt-1 w-full rounded border px-3 py-2 text-sm"
         >
           {igAccounts.map((a) => (
@@ -189,6 +206,21 @@ export function AutomationForm({
           className="mt-1 w-full rounded border px-3 py-2 text-sm"
         />
       </div>
+
+      {trigger === 'comment' && (
+        <div className="rounded border p-3" data-testid="post-picker-section">
+          <p className="mb-2 text-sm font-medium">Posts (optional)</p>
+          <p className="mb-3 text-xs text-gray-600">
+            Restrict the automation to specific posts/reels. Leave empty to fire on any post.
+          </p>
+          <PostPicker
+            igAccountId={igAccountId}
+            selected={selectedPostIds}
+            onChange={setSelectedPostIds}
+            disabled={igAccountId === ''}
+          />
+        </div>
+      )}
 
       <fieldset className="rounded border p-3" data-testid="intent-filter">
         <legend className="px-1 text-sm font-medium">Intent filter (optional)</legend>

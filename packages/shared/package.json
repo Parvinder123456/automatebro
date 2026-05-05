@@ -24,6 +24,7 @@
     "./handlers/igAccounts/connectIgAccount": "./src/handlers/igAccounts/connectIgAccount.ts",
     "./handlers/igAccounts/listIgAccounts": "./src/handlers/igAccounts/listIgAccounts.ts",
     "./handlers/igAccounts/disconnectIgAccount": "./src/handlers/igAccounts/disconnectIgAccount.ts",
+    "./handlers/igAccounts/listIgMedia": "./src/handlers/igAccounts/listIgMedia.ts",
     "./handlers/webhooks/ingestMetaWebhook": "./src/handlers/webhooks/ingestMetaWebhook.ts",
     "./handlers/automations/createAutomation": "./src/handlers/automations/createAutomation.ts",
     "./handlers/automations/listAutomations": "./src/handlers/automations/listAutomations.ts",

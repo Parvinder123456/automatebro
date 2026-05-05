@@ -34,7 +34,7 @@
 |---|---|---|---|---|
 | 1.1 | **DM-keyword automation** ("user DMs you") | ✅ shipped (`feat/phase1-dm-keyword` merged) | Low | Spec 015 — `'dm'` trigger enum, migration 009, `processDmEvent` parallel-dispatch with `captureLead`, UI radio option. |
 | 1.2 | **AI sentiment / intent classifier** | 🟡 in flight (`feat/phase1-2-ai-classifier`) | Low | Spec 016 — gpt-4o-mini classifier on inbound, persisted on `events.intent`, optional `triggers.intents` gate. Confidence floor 0.5. Cap-aware: skip on cap-exceeded, gate bypassed (logged). UI multi-select shipped. |
-| 1.3 | **Real post picker** | ❌ pending | Med | Replace newline-separated textarea with a thumbnail grid via Meta Graph `/me/media`. ~2 days. Big UX gap vs LinkPlease. |
+| 1.3 | **Real post picker** | 🟡 in flight (`feat/phase1-3-post-picker`) | Med | Spec 017 — `GET /api/v1/igAccounts/[id]/media` paginated, thumbnail-grid modal in automation form. Cache-injection seam ready (no-op default; Phase 2 wires Redis). Ships with no cache. |
 | 1.4 | **Story-reply automation** | ❌ pending | High | Schema enum already has `storyReply`. Needs Meta `instagram_manage_messages` permission via App Review. Build the code; ship UI as "Pending Meta approval" until granted. |
 
 ### Phase 2 — Revenue + retention (gated on Razorpay KYC)
