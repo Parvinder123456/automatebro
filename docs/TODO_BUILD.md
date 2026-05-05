@@ -6,11 +6,11 @@
 > for the v1 contract.
 
 **Last updated:** 2026-05-05
-**Branch in flight:** `feat/phase1-dm-keyword` (DM-keyword automation)
+**Branch in flight:** none — Phase 1 complete, Phase 2.2 shipped. Master is at the latest deployed state.
 
 ---
 
-## ✅ Already shipped (on `master` or pending PR)
+## ✅ Already shipped (live on `master`, deployed via Vercel + Railway)
 
 | Capability | Where |
 |---|---|
@@ -21,8 +21,14 @@
 | AI replies (gpt-4o-mini, moderation, cost cap) | spec 008 |
 | Lead capture inside DMs + CSV export | spec 009 |
 | Dashboard UI (sidebar, automations, leads, sends, settings) | spec 011 |
-| Marketing site `/`, `/pricing`, `/compare/*` | spec 012 (PR open) |
-| DPDP / privacy export + delete + consent gates | spec 013 (PR open) |
+| Marketing site `/`, `/pricing`, `/compare/*` | spec 012 |
+| DPDP / privacy export + delete + consent gates | spec 013 |
+| **DM-keyword automation** (Phase 1.1) | spec 015 |
+| **AI intent classifier + smart-trigger gate** (Phase 1.2) | spec 016 |
+| **Real Instagram post picker** (Phase 1.3) | spec 017 |
+| **Story-reply automation** (Phase 1.4 — code live, App-Review gated) | spec 018 |
+| **AI usage dashboard** (Phase 2.2) | spec 019 |
+| Migration runner env-isolation (admin-tool fix) | `1a5254b` |
 
 ---
 
@@ -32,17 +38,17 @@
 
 | # | Item | Status | Risk | Notes |
 |---|---|---|---|---|
-| 1.1 | **DM-keyword automation** ("user DMs you") | ✅ shipped (`feat/phase1-dm-keyword` merged) | Low | Spec 015 — `'dm'` trigger enum, migration 009, `processDmEvent` parallel-dispatch with `captureLead`, UI radio option. |
-| 1.2 | **AI sentiment / intent classifier** | 🟡 in flight (`feat/phase1-2-ai-classifier`) | Low | Spec 016 — gpt-4o-mini classifier on inbound, persisted on `events.intent`, optional `triggers.intents` gate. Confidence floor 0.5. Cap-aware: skip on cap-exceeded, gate bypassed (logged). UI multi-select shipped. |
-| 1.3 | **Real post picker** | 🟡 in flight (`feat/phase1-3-post-picker`) | Med | Spec 017 — `GET /api/v1/igAccounts/[id]/media` paginated, thumbnail-grid modal in automation form. Cache-injection seam ready (no-op default; Phase 2 wires Redis). Ships with no cache. |
-| 1.4 | **Story-reply automation** | 🟡 code-only (`feat/phase1-4-story-reply`) | High | Spec 018 — `processStoryReplyEvent` shipped, dispatcher branch wired, eventId synthesis tags `reply_to.story` as `kind='storyReply'`. UI radio kept disabled with "Beta — pending Meta approval" hint. Auto-enables when Meta grants `instagram_manage_messages` and `messages` is added to `WEBHOOK_FIELDS`. |
+| 1.1 | **DM-keyword automation** ("user DMs you") | ✅ live on master | Low | Spec 015 — `'dm'` trigger enum, migration 009 applied, `processDmEvent` parallel-dispatch with `captureLead`, UI radio option. |
+| 1.2 | **AI sentiment / intent classifier** | ✅ live on master | Low | Spec 016 — gpt-4o-mini classifier on inbound, persisted on `events.intent`, optional `triggers.intents` gate. Confidence floor 0.5. Cap-aware. UI multi-select shipped. Migration 010 applied. |
+| 1.3 | **Real post picker** | ✅ live on master | Med | Spec 017 — `GET /api/v1/igAccounts/[id]/media` paginated, thumbnail-grid modal in automation form. Cache-injection seam ready (no-op default; Phase 2 wires Redis). |
+| 1.4 | **Story-reply automation** | 🟡 code live, gated on Meta App Review | High | Spec 018 — `processStoryReplyEvent` shipped, dispatcher branch wired, eventId synthesis tags `reply_to.story` as `kind='storyReply'`. UI radio kept disabled with "Beta — pending Meta approval" hint. Auto-enables when Meta grants `instagram_manage_messages` and `messages` is added to `WEBHOOK_FIELDS`. |
 
 ### Phase 2 — Revenue + retention (gated on Razorpay KYC)
 
 | # | Item | Status | Notes |
 |---|---|---|---|
 | 2.1 | Razorpay billing | ❌ KYC blocked | Spec 010 — checkout, subscription webhook, plan-tier enforcement, dunning. |
-| 2.2 | AI usage dashboard | 🟡 in flight (`feat/phase2-2-ai-usage-dashboard`) | Spec 019 — `getAiUsageSummary` handler, `GET /api/v1/aiUsage`, dashboard summary card + full `/app/settings/ai-usage` page with 6-month history. INR formatting uses Indian-locale grouping (1,00,000). |
+| 2.2 | AI usage dashboard | ✅ live on master | Spec 019 — `getAiUsageSummary` handler, `GET /api/v1/aiUsage`, dashboard summary card + full `/app/settings/ai-usage` page with 6-month history. INR formatting uses Indian-locale grouping (1,00,000). |
 | 2.3 | Pagination + sortable tables | ❌ pending | Automations, leads, sends. Currently fixed limit (100 / 1000 / 1000). |
 
 ### Phase 3 — Differentiation
