@@ -179,12 +179,22 @@ export function AutomationForm({
             </span>
           </span>
         </label>
-        <label className="flex items-start gap-2 py-2 text-sm opacity-50">
+        <label
+          className="flex items-start gap-2 py-2 text-sm opacity-50"
+          data-testid="trigger-option-storyReply"
+        >
           <input type="radio" disabled aria-disabled="true" />
           <span>
             <span className="font-medium">User replies to your stories</span>
+            <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-amber-800">
+              Beta
+            </span>
             <br />
-            <span className="text-xs text-gray-600">Coming soon — pending Meta App Review.</span>
+            <span className="text-xs text-gray-600">
+              Backend ready — pending Meta App Review approval for{' '}
+              <code className="rounded bg-gray-100 px-1">instagram_manage_messages</code>. Will
+              auto-enable for all tenants once granted.
+            </span>
           </span>
         </label>
       </fieldset>

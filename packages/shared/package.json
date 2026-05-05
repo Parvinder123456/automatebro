@@ -32,6 +32,7 @@
     "./handlers/automations/deleteAutomation": "./src/handlers/automations/deleteAutomation.ts",
     "./handlers/processCommentEvent": "./src/handlers/processCommentEvent.ts",
     "./handlers/processDmEvent": "./src/handlers/processDmEvent.ts",
+    "./handlers/processStoryReplyEvent": "./src/handlers/processStoryReplyEvent.ts",
     "./handlers/sendDM": "./src/handlers/sendDM.ts",
     "./meta/rateLimit": "./src/meta/rateLimit.ts",
     "./meta/messageWindow": "./src/meta/messageWindow.ts",

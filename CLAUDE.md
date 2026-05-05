@@ -1276,3 +1276,11 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-05 — `<img>` in Next.js with external Meta CDN URLs needs `// eslint-disable-next-line @next/next/no-img-element` (we're not using `next/image` because the Meta URL set isn't on the configured remote-pattern list, and adding it for ephemeral picker thumbnails is overkill).
 - 2026-05-05 — When a post-picker modal mounts but the dependent IG account isn't selected yet, render a disabled trigger button (`disabled={igAccountId === ''}`) — don't render an empty-state error. The form can still be submitted with no posts selected (= "all posts"), so the picker is genuinely optional.
 
+### Spec 018 / Phase 1.4 lessons (2026-05-05)
+
+**Story-reply automation (code-ready, App-Review-gated)**
+- 2026-05-05 — Story replies arrive on the Meta `messages` webhook field with `messaging[].message.reply_to.story` set. They are NOT a separate webhook field. Tagging them in `parseWebhookEvents` is a 3-line check: `msg.message.reply_to?.story !== undefined → kind = 'storyReply'`. Reactions still take precedence (`msg.reaction` first), so a reaction TO a story remains `'messageReaction'`, not `'storyReply'`.
+- 2026-05-05 — Build-and-ship the handler even when production traffic is gated. The dispatcher branch + `processStoryReplyEvent` cost ~150 LOC, run only against synthetic test events, and drop a 1-line UI flip + 1-line `WEBHOOK_FIELDS` change between us and turn-on day. Doing it later when the unblocker arrives means re-paging into the multi-tenancy / ctx / repo / dedupe patterns; doing it now keeps the patterns fresh and the diff small.
+- 2026-05-05 — `void storyId;` is the cleanest TypeScript idiom for "I'm parsing this field but not using it yet" — silences `noUnusedVariables` without forcing a comment hack. When per-story scoping ships in a follow-up, the variable becomes live.
+- 2026-05-05 — UI badging pattern for "code is ready, permission pending": keep the radio disabled, add a `<span>Beta</span>` chip and a body line citing the exact Meta permission needed (`instagram_manage_messages`) so an operator browsing the form knows the unblocker. Avoid the temptation to enable the radio with a "won't fire" warning — tenants will create automations expecting them to fire.
+

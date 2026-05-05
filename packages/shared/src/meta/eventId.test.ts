@@ -130,3 +130,70 @@ describe('parseWebhookEvents', () => {
     expect(kinds).toContain('mention');
   });
 });
+
+// Spec 018 / Phase 1.4 — story reply detection
+describe('parseWebhookEvents — story reply tagging (Phase 1.4)', () => {
+  it('tags messaging events with reply_to.story as kind="storyReply"', () => {
+    const events = parseWebhookEvents({
+      entry: [
+        {
+          id: 'ig-1',
+          messaging: [
+            {
+              sender: { id: 'psid-1' },
+              recipient: { id: 'page-1' },
+              timestamp: 1_700_000_000,
+              message: {
+                mid: 'mid-story-reply-1',
+                text: 'cool story!',
+                reply_to: { story: { id: 'story-1', url: 'https://example.test/s/1' } },
+              },
+            },
+          ],
+        },
+      ],
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0]?.kind).toBe('storyReply');
+  });
+
+  it('tags plain DMs (no reply_to.story) as kind="message"', () => {
+    const events = parseWebhookEvents({
+      entry: [
+        {
+          id: 'ig-1',
+          messaging: [
+            {
+              sender: { id: 'psid-1' },
+              recipient: { id: 'page-1' },
+              timestamp: 1_700_000_000,
+              message: { mid: 'mid-dm-1', text: 'hello' },
+            },
+          ],
+        },
+      ],
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0]?.kind).toBe('message');
+  });
+
+  it('still tags reactions as kind="messageReaction"', () => {
+    const events = parseWebhookEvents({
+      entry: [
+        {
+          id: 'ig-1',
+          messaging: [
+            {
+              sender: { id: 'psid-1' },
+              recipient: { id: 'page-1' },
+              timestamp: 1_700_000_000,
+              reaction: { mid: 'mid-r-1', action: 'react', emoji: '❤️' },
+            },
+          ],
+        },
+      ],
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0]?.kind).toBe('messageReaction');
+  });
+});

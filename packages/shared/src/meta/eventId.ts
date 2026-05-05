@@ -103,10 +103,20 @@ export function parseWebhookEvents(payload: unknown): ParsedEvent[] {
     // messaging[]-style events (DMs, story replies, message reactions)
     if (Array.isArray(entry.messaging)) {
       for (const msg of entry.messaging) {
-        // Story replies arrive with message.is_echo=false and a story
-        // reference in message.reply_to.story; for v1 we treat all
-        // messaging events as 'message' unless they include a reaction.
-        const kind: EventKind = msg.reaction !== undefined ? 'messageReaction' : 'message';
+        // Spec 018 / Phase 1.4 — story replies arrive with
+        // `message.reply_to.story` set. Tag them as 'storyReply' so the
+        // dispatcher can route to processStoryReplyEvent. Reactions stay
+        // 'messageReaction'; everything else is a plain 'message'.
+        const isReaction = msg.reaction !== undefined;
+        const isStoryReply =
+          !isReaction &&
+          (msg as { message?: { reply_to?: { story?: unknown } } }).message?.reply_to?.story !==
+            undefined;
+        const kind: EventKind = isReaction
+          ? 'messageReaction'
+          : isStoryReply
+            ? 'storyReply'
+            : 'message';
         const mid = msg.message?.mid ?? msg.reaction?.mid ?? 'no-mid';
         const stableInput = `${entry.id}|${msg.timestamp ?? ''}|${msg.sender?.id ?? ''}|${mid}|${JSON.stringify(msg)}`;
         out.push({

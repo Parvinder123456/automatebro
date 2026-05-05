@@ -2,15 +2,19 @@ import { getDb } from '@automatebro/shared/db/client';
 import { captureLead } from '@automatebro/shared/handlers/captureLead';
 import { processCommentEvent } from '@automatebro/shared/handlers/processCommentEvent';
 import { processDmEvent } from '@automatebro/shared/handlers/processDmEvent';
+import { processStoryReplyEvent } from '@automatebro/shared/handlers/processStoryReplyEvent';
 import { logger } from '@automatebro/shared/logger';
 import type { ProcessEventJobType } from '@automatebro/shared/queue/jobTypes';
 import type { EventRecord } from '@automatebro/shared/types/tenant';
 /**
  * Spec 006 — process a webhook event.
- * Spec 007 — branches on event.kind:
- *   - 'comment' → processCommentEvent (keyword match + enqueue send-dm)
- *   - 'message' → captureLead (spec 009) AND processDmEvent (spec 015) in parallel
- *   - 'storyReply' → spec 017 — handler pending Meta App Review for instagram_manage_messages
+ * Branches on event.kind:
+ *   - 'comment'     → processCommentEvent (spec 007)
+ *   - 'message'     → captureLead (spec 009) + processDmEvent (spec 015) in parallel
+ *   - 'storyReply'  → processStoryReplyEvent (spec 018 / Phase 1.4) — handler is
+ *                     ready; production traffic is gated on Meta App Review for
+ *                     `instagram_manage_messages`. Until WEBHOOK_FIELDS includes
+ *                     `messages`, no storyReply events arrive.
  *   - 'messageReaction' / 'mention' → no-op for v1
  */
 import type { Job } from 'bullmq';
@@ -62,7 +66,14 @@ export async function processEvent(data: ProcessEventJobType, job: Job): Promise
       logger.info({ jobId: job.id, eventId: event._id, ...processed }, 'processDmEvent: completed');
       break;
     }
-    case 'storyReply':
+    case 'storyReply': {
+      const result = await processStoryReplyEvent(event);
+      logger.info(
+        { jobId: job.id, eventId: event._id, ...result },
+        'processStoryReplyEvent: completed',
+      );
+      break;
+    }
     case 'messageReaction':
     case 'mention':
       logger.info(
