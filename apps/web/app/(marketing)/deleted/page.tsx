@@ -19,8 +19,7 @@ export default function DeletedPage() {
       <h1 className="mb-3 text-3xl font-bold">Your workspace is scheduled for deletion</h1>
       <p className="mb-4 text-gray-700">
         We&apos;ve received your deletion request and your workspace is now invisible to you and
-        your team. All connected Instagram accounts have been disconnected on BloomDM&apos;s
-        side.
+        your team. All connected Instagram accounts have been disconnected on BloomDM&apos;s side.
       </p>
       <p className="mb-4 text-gray-700">
         Your data will be permanently deleted from our systems <strong>30 days from now</strong>.
@@ -37,8 +36,8 @@ export default function DeletedPage() {
       </p>
       <h2 className="mb-2 mt-8 text-xl font-semibold">Already revoked Meta?</h2>
       <p className="mb-4 text-gray-700">
-        BloomDM stops sending DMs immediately on deletion. If you also want to revoke
-        Meta&apos;s permission for BloomDM, you can do so from your{' '}
+        BloomDM stops sending DMs immediately on deletion. If you also want to revoke Meta&apos;s
+        permission for BloomDM, you can do so from your{' '}
         <a
           className="underline"
           href="https://www.facebook.com/settings?tab=business_tools"

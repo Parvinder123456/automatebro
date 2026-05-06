@@ -13,7 +13,7 @@ import {
 import { redirect } from 'next/navigation';
 import { getCtx } from '../../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'AI usage — AutomateBro' };
+export const metadata = { title: 'AI usage — BloomDM' };
 export const dynamic = 'force-dynamic';
 
 const PLAN_DEFAULTS_BLURB =

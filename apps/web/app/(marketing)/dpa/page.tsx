@@ -34,8 +34,8 @@ export default function DpaPage() {
           of Instagram end users captured via BloomDM automations the Tenant configures.
         </li>
         <li>
-          <strong>BloomDM:</strong> Data Processor under both frameworks. We process personal
-          data only on Tenant&apos;s documented instructions, namely the automation rules and data
+          <strong>BloomDM:</strong> Data Processor under both frameworks. We process personal data
+          only on Tenant&apos;s documented instructions, namely the automation rules and data
           export/delete requests issued through the dashboard or API.
         </li>
       </ul>

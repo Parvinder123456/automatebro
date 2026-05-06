@@ -59,9 +59,7 @@ export default function CompareLinkPlease() {
 
         <div className="mt-12 rounded-xl bg-gray-50 p-8 text-center">
           <h2 className="text-2xl font-bold">Ready to switch?</h2>
-          <p className="mt-2 text-gray-600">
-            Start free — no credit card, no contracts.
-          </p>
+          <p className="mt-2 text-gray-600">Start free — no credit card, no contracts.</p>
           <a
             href="/signup"
             className="mt-4 inline-block rounded-lg bg-black px-6 py-3 text-white hover:bg-gray-800"

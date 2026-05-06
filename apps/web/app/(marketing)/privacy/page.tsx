@@ -20,10 +20,10 @@ export default function PrivacyPage() {
 
       <h2 className="mt-8 text-2xl font-semibold">1. Who we are</h2>
       <p className="mt-2 text-gray-700">
-        BloomDM is an Instagram DM automation platform operated from India. For the purposes of
-        the Digital Personal Data Protection Act 2023 (&quot;DPDP&quot;), BloomDM is a Data
-        Fiduciary for the personal data of its tenant users, and a Data Processor for the personal
-        data of Instagram end users that tenants choose to capture via our platform.
+        BloomDM is an Instagram DM automation platform operated from India. For the purposes of the
+        Digital Personal Data Protection Act 2023 (&quot;DPDP&quot;), BloomDM is a Data Fiduciary
+        for the personal data of its tenant users, and a Data Processor for the personal data of
+        Instagram end users that tenants choose to capture via our platform.
       </p>
 
       <h2 className="mt-8 text-2xl font-semibold">2. What we collect</h2>

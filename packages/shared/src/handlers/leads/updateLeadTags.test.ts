@@ -61,7 +61,7 @@ describe('updateLeadTags', () => {
   });
 
   it('UT2: add mode unions with existing', async () => {
-    const c = setRepoMock(['vip']);
+    setRepoMock(['vip']);
     vi.resetModules();
     const { updateLeadTags } = await import('./updateLeadTags.js');
 
@@ -74,7 +74,7 @@ describe('updateLeadTags', () => {
   });
 
   it('UT3: remove mode subtracts existing', async () => {
-    const c = setRepoMock(['vip', 'buyer', 'spam']);
+    setRepoMock(['vip', 'buyer', 'spam']);
     vi.resetModules();
     const { updateLeadTags } = await import('./updateLeadTags.js');
 

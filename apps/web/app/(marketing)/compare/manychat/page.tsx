@@ -21,7 +21,11 @@ const ROWS = [
   { feature: 'Free Plan', us: 'Yes (1 account, 3 automations)', them: 'Limited' },
   { feature: 'Lead Capture in DM', us: 'Yes', them: 'Yes (Pro)' },
   { feature: 'Multi-Account Support', us: 'True unlimited (Agency)', them: 'Per-seat pricing' },
-  { feature: 'Setup Complexity', us: 'Connect + go (5 min)', them: 'Flow builder (learning curve)' },
+  {
+    feature: 'Setup Complexity',
+    us: 'Connect + go (5 min)',
+    them: 'Flow builder (learning curve)',
+  },
   { feature: 'Target Market', us: 'Indian creators & D2C', them: 'Global (US-centric)' },
   { feature: 'Data Residency (India)', us: 'Yes (Mumbai)', them: 'No' },
 ];
@@ -33,8 +37,8 @@ export default function CompareManyChat() {
         <h1 className="text-4xl font-bold">BloomDM vs ManyChat</h1>
         <p className="mt-3 text-lg text-gray-600">
           ManyChat is a great tool for global markets. But if you&apos;re an Indian creator or D2C
-          brand, BloomDM is built specifically for you — with INR pricing, AI replies from day
-          one, and data stored in India.
+          brand, BloomDM is built specifically for you — with INR pricing, AI replies from day one,
+          and data stored in India.
         </p>
 
         <div className="mt-12 overflow-x-auto">
