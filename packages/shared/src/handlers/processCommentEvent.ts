@@ -104,8 +104,10 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
       if (!trigger.postIds.includes(postId)) continue;
     }
 
-    // Keyword match (any keyword)
-    const hit = trigger.keywords.some((kw) => matchesKeyword(commentText, kw, trigger.matchMode));
+    // Keyword match — empty keywords array means "fire on any comment"
+    const hit =
+      trigger.keywords.length === 0 ||
+      trigger.keywords.some((kw) => matchesKeyword(commentText, kw, trigger.matchMode));
     if (!hit) continue;
 
     // Spec 016 — intent gate. When trigger.intents is non-empty and

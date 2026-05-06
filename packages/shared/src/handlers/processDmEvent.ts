@@ -126,8 +126,10 @@ export async function processDmEvent(event: EventRecord): Promise<ProcessDmResul
     // post-bound. Even if a tenant configured postIds on a dm-trigger
     // automation (legal in the schema), it's ignored here.
 
-    // Keyword match (any keyword)
-    const hit = trigger.keywords.some((kw) => matchesKeyword(messageText, kw, trigger.matchMode));
+    // Keyword match — empty keywords array means "fire on any DM"
+    const hit =
+      trigger.keywords.length === 0 ||
+      trigger.keywords.some((kw) => matchesKeyword(messageText, kw, trigger.matchMode));
     if (!hit) continue;
 
     // Spec 016 — intent gate. See processCommentEvent for the same

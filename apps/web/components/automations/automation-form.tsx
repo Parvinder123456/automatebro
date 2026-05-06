@@ -35,6 +35,7 @@ export function AutomationForm({
   // Empty array = "all posts" (default; matches triggers.postIds = null).
   const [igAccountId, setIgAccountId] = useState<string>(igAccounts[0]?._id ?? '');
   const [selectedPostIds, setSelectedPostIds] = useState<string[]>([]);
+  const [matchAny, setMatchAny] = useState(false);
   const submittingRef = useRef(false);
 
   function toggleIntent(label: IntentLabel): void {
@@ -57,10 +58,12 @@ export function AutomationForm({
     setSubmitting(true);
 
     const fd = new FormData(e.currentTarget);
-    const keywords = (fd.get('keywords') as string)
-      .split('\n')
-      .map((k) => k.trim())
-      .filter(Boolean);
+    const keywords = matchAny
+      ? []
+      : (fd.get('keywords') as string)
+          .split('\n')
+          .map((k) => k.trim())
+          .filter(Boolean);
 
     const intentList = Array.from(selectedIntents);
     const body = {
@@ -81,6 +84,9 @@ export function AutomationForm({
       response: {
         mode: 'static' as const,
         template: fd.get('template') as string,
+        ...(trigger === 'comment' && (fd.get('commentReply') as string)?.trim()
+          ? { commentReply: (fd.get('commentReply') as string).trim() }
+          : {}),
       },
     };
 
@@ -200,21 +206,34 @@ export function AutomationForm({
       </fieldset>
 
       <div>
-        <label htmlFor="keywords" className="block text-sm font-medium">
-          Keywords
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={matchAny}
+            onChange={(e) => setMatchAny(e.target.checked)}
+            data-testid="match-any-toggle"
+          />
+          Fire on any {trigger === 'dm' ? 'DM' : 'comment'} (no keyword filter)
         </label>
-        <textarea
-          id="keywords"
-          name="keywords"
-          required
-          rows={3}
-          placeholder={
-            trigger === 'dm'
-              ? 'One keyword per line. Match is case-insensitive against the DM text.'
-              : 'One keyword per line. Match is case-insensitive against the comment text.'
-          }
-          className="mt-1 w-full rounded border px-3 py-2 text-sm"
-        />
+        {!matchAny && (
+          <>
+            <label htmlFor="keywords" className="mt-3 block text-sm font-medium">
+              Keywords
+            </label>
+            <textarea
+              id="keywords"
+              name="keywords"
+              required
+              rows={3}
+              placeholder={
+                trigger === 'dm'
+                  ? 'One keyword per line. Match is case-insensitive against the DM text.'
+                  : 'One keyword per line. Match is case-insensitive against the comment text.'
+              }
+              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+            />
+          </>
+        )}
       </div>
 
       {trigger === 'comment' && (
@@ -263,16 +282,40 @@ export function AutomationForm({
 
       <div>
         <label htmlFor="template" className="block text-sm font-medium">
-          Reply template
+          {trigger === 'comment' ? 'DM template' : 'Reply template'}
         </label>
         <textarea
           id="template"
           name="template"
           required
           rows={3}
+          placeholder={
+            trigger === 'comment'
+              ? 'The private DM sent to the commenter. Use {username} for their name.'
+              : 'The reply sent to the user. Use {username} for their name.'
+          }
           className="mt-1 w-full rounded border px-3 py-2 text-sm"
         />
       </div>
+
+      {trigger === 'comment' && (
+        <div>
+          <label htmlFor="commentReply" className="block text-sm font-medium">
+            Comment reply (optional)
+          </label>
+          <p className="mt-0.5 text-xs text-gray-600">
+            Public reply posted under the comment. Leave empty to only send a DM.
+          </p>
+          <textarea
+            id="commentReply"
+            name="commentReply"
+            rows={2}
+            placeholder="e.g. Check your DMs, @{username}!"
+            data-testid="comment-reply-input"
+            className="mt-1 w-full rounded border px-3 py-2 text-sm"
+          />
+        </div>
+      )}
 
       <button
         type="submit"

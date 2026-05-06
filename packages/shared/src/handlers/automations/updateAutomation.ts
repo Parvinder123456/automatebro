@@ -10,7 +10,7 @@ import { IntentSchema } from '../../db/schema.js';
 export const UpdateAutomationInput = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   status: z.enum(['active', 'paused', 'archived']).optional(),
-  keywords: z.array(z.string().trim().min(1)).min(1).max(50).optional(),
+  keywords: z.array(z.string().trim().min(1)).max(50).optional(),
   matchMode: z.enum(['contains', 'exact', 'startsWith']).optional(),
   postIds: z.array(z.string().min(1)).max(500).nullable().optional(),
   // Spec 016 — accept intents on patch too. Pass null to clear the gate.

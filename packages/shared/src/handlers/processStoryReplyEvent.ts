@@ -126,8 +126,10 @@ export async function processStoryReplyEvent(event: EventRecord): Promise<Proces
     // column and gate here.
     void storyId;
 
-    // Keyword match (any keyword)
-    const hit = trigger.keywords.some((kw) => matchesKeyword(messageText, kw, trigger.matchMode));
+    // Keyword match — empty keywords array means "fire on any story reply"
+    const hit =
+      trigger.keywords.length === 0 ||
+      trigger.keywords.some((kw) => matchesKeyword(messageText, kw, trigger.matchMode));
     if (!hit) continue;
 
     // Intent gate (spec 016)

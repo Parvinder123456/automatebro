@@ -19,7 +19,7 @@ export const CreateAutomationInput = z.object({
   // Spec 015 — `dm` added so an automation can fire on inbound DMs.
   trigger: z.enum(['comment', 'dm', 'storyReply', 'mention']).default('comment'),
   status: z.enum(['active', 'paused', 'archived']).default('active'),
-  keywords: z.array(z.string().trim().min(1)).min(1).max(50),
+  keywords: z.array(z.string().trim().min(1)).max(50),
   matchMode: z.enum(['contains', 'exact', 'startsWith']).default('contains'),
   postIds: z.array(z.string().min(1)).max(500).optional(),
   // Spec 016 — optional intent gate. When non-empty, the trigger only
