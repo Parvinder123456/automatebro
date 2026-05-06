@@ -6,7 +6,7 @@ import { RowActions } from '../../../../components/automations/row-actions';
 import { StatusBadge } from '../../../../components/automations/status-badge';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'Automations — AutomateBro' };
+export const metadata = { title: 'Automations — BloomDM' };
 export const dynamic = 'force-dynamic';
 
 interface PageProps {

@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
-    "AutomateBro's privacy policy. How we collect, store, and process personal data. DPDP-aligned for Indian users; GDPR-compatible posture for EU users.",
+    "BloomDM's privacy policy. How we collect, store, and process personal data. DPDP-aligned for Indian users; GDPR-compatible posture for EU users.",
 };
 
 const LAST_UPDATED = '2026-05-05';
@@ -20,8 +20,8 @@ export default function PrivacyPage() {
 
       <h2 className="mt-8 text-2xl font-semibold">1. Who we are</h2>
       <p className="mt-2 text-gray-700">
-        AutomateBro is an Instagram DM automation platform operated from India. For the purposes of
-        the Digital Personal Data Protection Act 2023 (&quot;DPDP&quot;), AutomateBro is a Data
+        BloomDM is an Instagram DM automation platform operated from India. For the purposes of
+        the Digital Personal Data Protection Act 2023 (&quot;DPDP&quot;), BloomDM is a Data
         Fiduciary for the personal data of its tenant users, and a Data Processor for the personal
         data of Instagram end users that tenants choose to capture via our platform.
       </p>
@@ -79,15 +79,15 @@ export default function PrivacyPage() {
         <li>
           <strong>Right to erasure:</strong> request deletion via Settings → Privacy → Delete
           workspace. Soft-deleted immediately; hard-deleted 30 days later. Email{' '}
-          <a href="mailto:hello@automatebro.com" className="underline">
-            hello@automatebro.com
+          <a href="mailto:parvinderawal@gmail.com" className="underline">
+            parvinderawal@gmail.com
           </a>{' '}
           to cancel before the 30-day window closes.
         </li>
         <li>
           <strong>Right to grievance redressal:</strong> our Grievance Officer can be reached at{' '}
-          <a href="mailto:hello@automatebro.com" className="underline">
-            hello@automatebro.com
+          <a href="mailto:parvinderawal@gmail.com" className="underline">
+            parvinderawal@gmail.com
           </a>
           . We respond within 30 days.
         </li>
@@ -136,8 +136,8 @@ export default function PrivacyPage() {
 
       <p className="mt-10 text-sm text-gray-500">
         Questions? Email{' '}
-        <a href="mailto:hello@automatebro.com" className="underline">
-          hello@automatebro.com
+        <a href="mailto:parvinderawal@gmail.com" className="underline">
+          parvinderawal@gmail.com
         </a>
         .
       </p>

@@ -4,7 +4,7 @@ import { Pager } from '../../../../components/app/pager';
 import { StatusFilter } from '../../../../components/sends/status-filter';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'Sends — AutomateBro' };
+export const metadata = { title: 'Sends — BloomDM' };
 export const dynamic = 'force-dynamic';
 
 const STATUSES = ['queued', 'sent', 'failed', 'rateLimited', 'outsideWindow'] as const;

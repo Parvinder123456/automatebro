@@ -8,7 +8,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Data Processing Addendum',
   description:
-    "AutomateBro's Data Processing Addendum (DPA) for tenants. DPDP-aligned, GDPR-compatible. Sub-processor list and data flow disclosures.",
+    "BloomDM's Data Processing Addendum (DPA) for tenants. DPDP-aligned, GDPR-compatible. Sub-processor list and data flow disclosures.",
 };
 
 const LAST_UPDATED = '2026-05-05';
@@ -21,7 +21,7 @@ export default function DpaPage() {
 
       <p className="mt-6 text-gray-700">
         This Data Processing Addendum (&quot;DPA&quot;) supplements our Terms of Service and applies
-        whenever AutomateBro (&quot;Processor&quot;) processes personal data on behalf of you
+        whenever BloomDM (&quot;Processor&quot;) processes personal data on behalf of you
         (&quot;Controller&quot; or &quot;Tenant&quot;) under the Digital Personal Data Protection
         Act 2023 (&quot;DPDP&quot;) of India, and where applicable under the GDPR for EU-resident
         end users.
@@ -31,10 +31,10 @@ export default function DpaPage() {
       <ul className="mt-2 space-y-2 text-gray-700">
         <li>
           <strong>Tenant:</strong> Data Fiduciary (DPDP) / Data Controller (GDPR) for personal data
-          of Instagram end users captured via AutomateBro automations the Tenant configures.
+          of Instagram end users captured via BloomDM automations the Tenant configures.
         </li>
         <li>
-          <strong>AutomateBro:</strong> Data Processor under both frameworks. We process personal
+          <strong>BloomDM:</strong> Data Processor under both frameworks. We process personal
           data only on Tenant&apos;s documented instructions, namely the automation rules and data
           export/delete requests issued through the dashboard or API.
         </li>
@@ -80,7 +80,7 @@ export default function DpaPage() {
       <h2 className="mt-8 text-2xl font-semibold">6. Data subject requests</h2>
       <p className="mt-2 text-gray-700">
         Tenants self-serve access and deletion rights via Settings → Privacy. End-user requests
-        received directly by AutomateBro will be forwarded to the relevant Tenant within 5 business
+        received directly by BloomDM will be forwarded to the relevant Tenant within 5 business
         days; we do not act on end-user requests unilaterally.
       </p>
 
@@ -106,8 +106,8 @@ export default function DpaPage() {
 
       <p className="mt-10 text-sm text-gray-500">
         For a counter-signed copy of this DPA (Agency-tier and above), email{' '}
-        <a href="mailto:hello@automatebro.com" className="underline">
-          hello@automatebro.com
+        <a href="mailto:parvinderawal@gmail.com" className="underline">
+          parvinderawal@gmail.com
         </a>
         .
       </p>

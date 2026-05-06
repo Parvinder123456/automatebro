@@ -1,7 +1,7 @@
 import { WorkspaceForm } from '../../../components/onboarding/workspace-form';
 import { getCtx } from '../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'Welcome — AutomateBro' };
+export const metadata = { title: 'Welcome — BloomDM' };
 
 /**
  * Spec 003 — onboarding. Shows the workspace-name form.
@@ -15,7 +15,7 @@ export default async function OnboardingPage() {
 
   return (
     <main className="mx-auto max-w-md p-8" data-testid="onboarding-page">
-      <h1 className="mb-2 text-3xl font-semibold">Welcome to AutomateBro</h1>
+      <h1 className="mb-2 text-3xl font-semibold">Welcome to BloomDM</h1>
       <p className="mb-6 text-sm text-gray-600">
         Signed in as <strong>{ctx?.email ?? 'unknown'}</strong>. Pick a name for your workspace to
         get started.

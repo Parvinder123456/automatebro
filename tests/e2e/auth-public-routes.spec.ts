@@ -11,7 +11,7 @@ test.describe('public routes (no auth)', () => {
     const response = await request.get('/');
     expect(response.status()).toBe(200);
     const html = await response.text();
-    expect(html).toContain('AutomateBro');
+    expect(html).toContain('BloomDM');
     // Spec 012 marketing site — header CTA + hero CTA copy.
     expect(html).toContain('Sign up');
     expect(html).toContain('Start free');

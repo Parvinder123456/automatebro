@@ -69,7 +69,7 @@ export default async function ComparePage({ params }: Params) {
 
       <div className="flex flex-wrap gap-3">
         <a href="/signup" className="rounded bg-black px-5 py-2 text-white hover:opacity-90">
-          Try AutomateBro free
+          Try BloomDM free
         </a>
         <a href="/pricing" className="rounded border px-5 py-2 hover:bg-gray-50">
           See pricing

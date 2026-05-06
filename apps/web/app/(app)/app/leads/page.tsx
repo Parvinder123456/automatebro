@@ -4,7 +4,7 @@ import { Pager } from '../../../../components/app/pager';
 import { TagEditor } from '../../../../components/leads/tag-editor';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'Leads — AutomateBro' };
+export const metadata = { title: 'Leads — BloomDM' };
 export const dynamic = 'force-dynamic';
 
 interface PageProps {

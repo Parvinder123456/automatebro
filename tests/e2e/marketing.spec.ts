@@ -30,7 +30,7 @@ test.describe('marketing site (public)', () => {
     await page.goto('/compare/manychat');
     await expect(page).toHaveURL(/\/compare\/manychat$/);
     await expect(page.getByTestId('compare-page-manychat')).toBeVisible();
-    await expect(page.locator('h1')).toContainText('AutomateBro vs ManyChat');
+    await expect(page.locator('h1')).toContainText('BloomDM vs ManyChat');
     await expect(page.getByTestId('verdict')).toBeVisible();
   });
 

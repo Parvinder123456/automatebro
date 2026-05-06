@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { LoginForm } from '../../../components/auth/login-form';
 
-export const metadata = { title: 'Sign in — AutomateBro' };
+export const metadata = { title: 'Sign in — BloomDM' };
 
 export default function LoginPage() {
   return (

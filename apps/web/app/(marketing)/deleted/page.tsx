@@ -9,7 +9,7 @@ import type { Metadata } from 'next';
  */
 export const metadata: Metadata = {
   title: 'Workspace deleted',
-  description: 'Your AutomateBro workspace is scheduled for deletion.',
+  description: 'Your BloomDM workspace is scheduled for deletion.',
   robots: { index: false, follow: false },
 };
 
@@ -19,7 +19,7 @@ export default function DeletedPage() {
       <h1 className="mb-3 text-3xl font-bold">Your workspace is scheduled for deletion</h1>
       <p className="mb-4 text-gray-700">
         We&apos;ve received your deletion request and your workspace is now invisible to you and
-        your team. All connected Instagram accounts have been disconnected on AutomateBro&apos;s
+        your team. All connected Instagram accounts have been disconnected on BloomDM&apos;s
         side.
       </p>
       <p className="mb-4 text-gray-700">
@@ -29,16 +29,16 @@ export default function DeletedPage() {
       <h2 className="mb-2 mt-8 text-xl font-semibold">Changed your mind?</h2>
       <p className="mb-4 text-gray-700">
         Email{' '}
-        <a className="underline" href="mailto:hello@automatebro.com">
-          hello@automatebro.com
+        <a className="underline" href="mailto:parvinderawal@gmail.com">
+          parvinderawal@gmail.com
         </a>{' '}
         from the same email address you signed up with, before the 30-day window closes, and
         we&apos;ll restore your workspace.
       </p>
       <h2 className="mb-2 mt-8 text-xl font-semibold">Already revoked Meta?</h2>
       <p className="mb-4 text-gray-700">
-        AutomateBro stops sending DMs immediately on deletion. If you also want to revoke
-        Meta&apos;s permission for AutomateBro, you can do so from your{' '}
+        BloomDM stops sending DMs immediately on deletion. If you also want to revoke
+        Meta&apos;s permission for BloomDM, you can do so from your{' '}
         <a
           className="underline"
           href="https://www.facebook.com/settings?tab=business_tools"

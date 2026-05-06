@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description:
-    "AutomateBro's terms of service. Acceptable use, billing, liability, and termination rules for Indian creators and agencies.",
+    "BloomDM's terms of service. Acceptable use, billing, liability, and termination rules for Indian creators and agencies.",
 };
 
 const LAST_UPDATED = '2026-05-05';
@@ -19,7 +19,7 @@ export default function TermsPage() {
 
       <h2 className="mt-8 text-2xl font-semibold">1. Acceptance</h2>
       <p className="mt-2 text-gray-700">
-        By creating an AutomateBro workspace you (&quot;you&quot;, &quot;tenant&quot;) accept these
+        By creating an BloomDM workspace you (&quot;you&quot;, &quot;tenant&quot;) accept these
         Terms and our Privacy Policy. If you don&apos;t agree, don&apos;t use the service.
       </p>
 
@@ -33,7 +33,7 @@ export default function TermsPage() {
       <h2 className="mt-8 text-2xl font-semibold">3. Acceptable use</h2>
       <p className="mt-2 text-gray-700">You agree NOT to:</p>
       <ul className="mt-2 space-y-2 text-gray-700">
-        <li>Use AutomateBro to send spam, harassment, or unlawful content.</li>
+        <li>Use BloomDM to send spam, harassment, or unlawful content.</li>
         <li>
           Send bulk DMs to Instagram users who have not opted in by interacting with your business
           account.
@@ -43,8 +43,8 @@ export default function TermsPage() {
           Attempt to bypass our rate limits, the Meta Graph API rate limits, or the 24-hour
           messaging window.
         </li>
-        <li>Resell or sub-license AutomateBro without a written Agency agreement.</li>
-        <li>Reverse-engineer or scrape AutomateBro itself.</li>
+        <li>Resell or sub-license BloomDM without a written Agency agreement.</li>
+        <li>Reverse-engineer or scrape BloomDM itself.</li>
       </ul>
       <p className="mt-2 text-gray-700">
         Violations may result in immediate suspension. Repeat violations terminate your workspace.
@@ -79,8 +79,8 @@ export default function TermsPage() {
         <li>
           Refunds are not offered for partial-month usage but are considered in good faith on a
           case-by-case basis. Email{' '}
-          <a href="mailto:hello@automatebro.com" className="underline">
-            hello@automatebro.com
+          <a href="mailto:parvinderawal@gmail.com" className="underline">
+            parvinderawal@gmail.com
           </a>
           .
         </li>
@@ -94,15 +94,15 @@ export default function TermsPage() {
       <p className="mt-2 text-gray-700">
         We aim for 99.5% monthly uptime on the dashboard and webhook endpoint. We do not currently
         offer a contractual SLA. We publish incidents at{' '}
-        <a href="mailto:hello@automatebro.com" className="underline">
-          hello@automatebro.com
+        <a href="mailto:parvinderawal@gmail.com" className="underline">
+          parvinderawal@gmail.com
         </a>
         .
       </p>
 
       <h2 className="mt-8 text-2xl font-semibold">7. Disclaimers</h2>
       <p className="mt-2 text-gray-700">
-        AutomateBro is provided AS-IS. We don&apos;t guarantee specific conversion rates,
+        BloomDM is provided AS-IS. We don&apos;t guarantee specific conversion rates,
         deliverability, or business outcomes. Meta may change its API at any time; we make best
         effort to keep up.
       </p>
@@ -127,8 +127,8 @@ export default function TermsPage() {
 
       <p className="mt-10 text-sm text-gray-500">
         Questions? Email{' '}
-        <a href="mailto:hello@automatebro.com" className="underline">
-          hello@automatebro.com
+        <a href="mailto:parvinderawal@gmail.com" className="underline">
+          parvinderawal@gmail.com
         </a>
         .
       </p>

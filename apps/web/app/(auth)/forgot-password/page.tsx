@@ -1,6 +1,6 @@
 import { ForgotPasswordForm } from '../../../components/auth/forgot-password-form';
 
-export const metadata = { title: 'Reset password — AutomateBro' };
+export const metadata = { title: 'Reset password — BloomDM' };
 
 export default function ForgotPasswordPage() {
   return (

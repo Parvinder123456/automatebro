@@ -95,7 +95,7 @@ export function WorkspaceForm() {
         />
         <span>
           I confirm I have the authority to process personal data (Instagram handles, emails, phone
-          numbers) of users who interact with my connected Instagram accounts via AutomateBro
+          numbers) of users who interact with my connected Instagram accounts via BloomDM
           automations. I&apos;ll comply with India&apos;s DPDP Act and applicable privacy laws.
         </span>
       </label>

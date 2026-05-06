@@ -17,24 +17,25 @@ import { CookieBanner } from '../../components/marketing/cookie-banner';
 import { Footer } from '../../components/marketing/footer';
 import { Header } from '../../components/marketing/header';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://automatebro.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bloomdm.in';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'AutomateBro — Instagram DM automation for Indian creators',
-    template: '%s — AutomateBro',
+    default: 'BloomDM — Instagram DM automation for Indian creators',
+    template: '%s — BloomDM',
   },
   description:
     'Auto-reply to comments and stories with templated or AI-generated DMs. Flat INR pricing, true unlimited accounts, native AI replies. Built for Indian creators and D2C brands.',
   openGraph: {
-    title: 'AutomateBro — Instagram DM automation for Indian creators',
+    title: 'BloomDM — Instagram DM automation for Indian creators',
     description:
       'Comment-to-DM, story-reply automation, AI replies, lead capture. Flat INR pricing.',
     url: SITE_URL,
-    siteName: 'AutomateBro',
+    siteName: 'BloomDM',
     locale: 'en_IN',
     type: 'website',
+    images: [{ url: '/og-logo.png', width: 400, height: 400, alt: 'BloomDM' }],
   },
 };
 

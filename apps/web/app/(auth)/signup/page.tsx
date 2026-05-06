@@ -1,6 +1,6 @@
 import { SignupForm } from '../../../components/auth/signup-form';
 
-export const metadata = { title: 'Create account — AutomateBro' };
+export const metadata = { title: 'Create account — BloomDM' };
 
 export default function SignupPage() {
   return (

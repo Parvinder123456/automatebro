@@ -73,17 +73,17 @@ export function Footer() {
           <h4 className="mb-3 font-semibold">Contact</h4>
           <ul className="space-y-2 text-gray-600">
             <li>
-              <a href="mailto:hello@automatebro.com" className="hover:text-black">
-                hello@automatebro.com
+              <a href="mailto:parvinderawal@gmail.com" className="hover:text-black">
+                parvinderawal@gmail.com
               </a>
             </li>
-            <li className="text-xs text-gray-500">AutomateBro · Made in India</li>
+            <li className="text-xs text-gray-500">BloomDM · Made in India</li>
           </ul>
         </div>
       </div>
 
       <div className="mx-auto max-w-6xl border-t px-6 py-4 text-xs text-gray-500">
-        © {year} AutomateBro. Instagram® is a trademark of Meta Platforms, Inc. AutomateBro is not
+        © {year} BloomDM. Instagram® is a trademark of Meta Platforms, Inc. BloomDM is not
         affiliated with Meta.
       </div>
     </footer>

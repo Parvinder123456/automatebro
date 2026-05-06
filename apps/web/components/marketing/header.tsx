@@ -15,8 +15,9 @@ export function Header() {
   return (
     <header className="border-b bg-white" data-testid="marketing-header">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <a href="/" className="text-lg font-semibold" data-testid="header-logo">
-          AutomateBro
+        <a href="/" className="flex items-center gap-2 text-lg font-semibold" data-testid="header-logo">
+          <img src="/logo-header.png" alt="BloomDM" width={32} height={32} />
+          BloomDM
         </a>
 
         <nav className="hidden items-center gap-6 sm:flex">

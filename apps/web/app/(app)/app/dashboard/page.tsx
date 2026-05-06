@@ -8,7 +8,7 @@ import { AiUsageCard } from '../../../../components/dashboard/ai-usage-card';
 import { OnboardingChecklist } from '../../../../components/dashboard/onboarding-checklist';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'Dashboard — AutomateBro' };
+export const metadata = { title: 'Dashboard — BloomDM' };
 
 export default async function DashboardPage() {
   const ctx = await getCtx();

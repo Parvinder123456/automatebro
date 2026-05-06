@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { AutomationForm } from '../../../../../components/automations/automation-form';
 import { getCtx } from '../../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'New Automation — AutomateBro' };
+export const metadata = { title: 'New Automation — BloomDM' };
 
 export default async function NewAutomationPage() {
   const ctx = await getCtx();

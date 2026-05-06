@@ -1,4 +1,4 @@
-export const metadata = { title: 'Check your email — AutomateBro' };
+export const metadata = { title: 'Check your email — BloomDM' };
 
 export default function VerifyPage() {
   return (

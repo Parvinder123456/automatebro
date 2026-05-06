@@ -37,7 +37,10 @@ export async function Sidebar({ workspaceName }: { workspaceName: string }) {
       data-testid="app-sidebar"
     >
       <div className="mb-6 px-2">
-        <div className="text-lg font-semibold">AutomateBro</div>
+        <div className="flex items-center gap-2 text-lg font-semibold">
+          <img src="/logo-header.png" alt="BloomDM" width={28} height={28} />
+          BloomDM
+        </div>
         <div className="text-xs text-gray-600" data-testid="sidebar-workspace">
           {workspaceName}
         </div>

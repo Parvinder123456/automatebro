@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { PrivacyPanel } from '../../../../components/settings/privacy-panel';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'Settings — AutomateBro' };
+export const metadata = { title: 'Settings — BloomDM' };
 export const dynamic = 'force-dynamic';
 
 /**

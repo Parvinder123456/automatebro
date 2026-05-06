@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { DisconnectButton } from '../../../../components/integrations/disconnect-button';
 import { getCtx } from '../../../../lib/auth/get-ctx';
 
-export const metadata = { title: 'Integrations — AutomateBro' };
+export const metadata = { title: 'Integrations — BloomDM' };
 
 interface PageProps {
   searchParams: Promise<{ connected?: string; error?: string }>;
@@ -51,7 +51,7 @@ export default async function IntegrationsPage({ searchParams }: PageProps) {
     <main className="mx-auto max-w-3xl p-8" data-testid="integrations-page">
       <h1 className="mb-2 text-3xl font-semibold">Integrations</h1>
       <p className="mb-6 text-sm text-gray-600">
-        Connect your Instagram Business account so AutomateBro can send DMs and reply to comments on
+        Connect your Instagram Business account so BloomDM can send DMs and reply to comments on
         your behalf.
       </p>
 

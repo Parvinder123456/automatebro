@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Instagram DM automation for Indian creators',
   description:
-    'AutomateBro replies to Instagram comments and stories with templated or AI-generated DMs. Flat INR pricing, true unlimited accounts, lead capture inside DMs.',
+    'BloomDM replies to Instagram comments and stories with templated or AI-generated DMs. Flat INR pricing, true unlimited accounts, lead capture inside DMs.',
 };
 
 export default function HomePage() {
