@@ -26,7 +26,7 @@ const PUBLIC_EXACT = new Set<string>([
 /**
  * Public path prefixes (matches if pathname starts with one of these).
  */
-const PUBLIC_PREFIXES = ['/compare/', '/api/v1/auth/callback', '/api/v1/webhooks/'];
+const PUBLIC_PREFIXES = ['/compare/', '/api/v1/auth/callback', '/api/v1/webhooks/', '/api/v1/privacy/callback'];
 
 /**
  * Returns true if the path should be reachable without an authenticated
