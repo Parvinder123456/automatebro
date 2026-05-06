@@ -58,6 +58,16 @@ export function AutomationForm({
     setSubmitting(true);
 
     const fd = new FormData(e.currentTarget);
+    const template = ((fd.get('template') as string) ?? '').trim();
+    const commentReply = trigger === 'comment' ? ((fd.get('commentReply') as string) ?? '').trim() : '';
+
+    if (trigger === 'comment' && template === '' && commentReply === '') {
+      submittingRef.current = false;
+      setSubmitting(false);
+      alert('Fill in at least one of DM template or comment reply.');
+      return;
+    }
+
     const keywords = matchAny
       ? []
       : (fd.get('keywords') as string)
@@ -69,24 +79,14 @@ export function AutomationForm({
     const body = {
       igAccountId,
       name: fd.get('name') as string,
-      // Spec 015 — explicitly send trigger; the API still defaults to
-      // 'comment' if absent (backwards compat) but every new automation
-      // from this form declares its trigger.
       trigger,
       keywords,
-      // Spec 016 — only send intents when at least one is selected;
-      // otherwise leave it null/undefined so the trigger is "any intent".
       ...(intentList.length > 0 ? { intents: intentList } : {}),
-      // Phase 1.3 / spec 017 — only send postIds when comment-trigger
-      // AND at least one selected. DM-trigger ignores postIds in the
-      // worker even if set.
       ...(trigger === 'comment' && selectedPostIds.length > 0 ? { postIds: selectedPostIds } : {}),
       response: {
         mode: 'static' as const,
-        template: fd.get('template') as string,
-        ...(trigger === 'comment' && (fd.get('commentReply') as string)?.trim()
-          ? { commentReply: (fd.get('commentReply') as string).trim() }
-          : {}),
+        ...(template !== '' ? { template } : {}),
+        ...(commentReply !== '' ? { commentReply } : {}),
       },
     };
 
@@ -282,16 +282,16 @@ export function AutomationForm({
 
       <div>
         <label htmlFor="template" className="block text-sm font-medium">
-          {trigger === 'comment' ? 'DM template' : 'Reply template'}
+          {trigger === 'comment' ? 'DM template (optional if comment reply is set)' : 'Reply template'}
         </label>
         <textarea
           id="template"
           name="template"
-          required
+          required={trigger !== 'comment'}
           rows={3}
           placeholder={
             trigger === 'comment'
-              ? 'The private DM sent to the commenter. Use {username} for their name.'
+              ? 'The private DM sent to the commenter. Use {username} for their name. Leave empty for comment-reply only.'
               : 'The reply sent to the user. Use {username} for their name.'
           }
           className="mt-1 w-full rounded border px-3 py-2 text-sm"
@@ -301,10 +301,10 @@ export function AutomationForm({
       {trigger === 'comment' && (
         <div>
           <label htmlFor="commentReply" className="block text-sm font-medium">
-            Comment reply (optional)
+            Comment reply (optional if DM template is set)
           </label>
           <p className="mt-0.5 text-xs text-gray-600">
-            Public reply posted under the comment. Leave empty to only send a DM.
+            Public reply posted under the comment. Fill in at least one of DM template or comment reply.
           </p>
           <textarea
             id="commentReply"
