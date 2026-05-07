@@ -1348,3 +1348,10 @@ These augment — but never contradict — the rules in the cc-mastery section a
 - 2026-05-05 — Server Component pagination via URL `?page=N` (not client-side state) means refresh / back-button / share-link Just Work. Don't reach for `useState` + `fetch` for pagination on Server-rendered list pages — the URL is the source of truth.
 - 2026-05-05 — CSV export needs all matching rows in one shot, not pagination. Dual-purpose handlers stay clean if you document a back-compat `limit` shim that the export route uses (`pageSize: 5000, page: 1` ≈ "give me everything"). Don't fork into `listLeads` + `listAllLeadsForCsv` — one handler, two callers, one paged interface.
 
+### Worker / Upstash tuning (2026-05-07)
+
+**BullMQ idle polling burns Redis commands**
+- 2026-05-07 — A BullMQ Worker with `concurrency: 5` issues blocking pulls (`BZPOPMIN` / `BRPOPLPUSH`) on every concurrency slot. Even with zero traffic, that's ~1 cmd / 5s × 5 slots = ~86,000 Redis commands/day **idle**. Plus stalled-job checker every 30s. Upstash free tier is 10K cmds/day — exhausted in ~3 hours of uptime with nobody using the app.
+- 2026-05-07 — Pre-launch tuning applied to `apps/worker/src/index.ts`: `WORKER_CONCURRENCY: 5 → 1`, `drainDelay: 5 → 30`, `stalledInterval: 30s → 5min`, `HEARTBEAT_INTERVAL_MS: 30s → 5min`. Drops idle floor from ~90K cmds/day to ~3K cmds/day. Tradeoff: a job may wait up to 30s before pickup (was ~1s). Acceptable until real traffic + paid Redis tier; revert by bumping concurrency back to 5 and drainDelay to default.
+- 2026-05-07 — Upstash free tier is a poor fit for any BullMQ workload because BullMQ's blocking-pull model fights pay-per-command pricing. For real traffic, switch to Railway Redis (memory-billed, not command-billed) or Upstash paid tier.
+

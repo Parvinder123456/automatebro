@@ -26,15 +26,21 @@ import { sendCommentReply } from './jobs/sendCommentReply.js';
 import { sendDM } from './jobs/sendDM.js';
 
 const HEARTBEAT_KEY = 'worker:heartbeat';
-const HEARTBEAT_INTERVAL_MS = 30_000;
-const HEARTBEAT_TTL_SEC = 90;
+// Pre-launch tuning (2026-05-07): bumped from 30s → 5min to cut Upstash
+// command usage. Bump back down once we have real traffic + paid Redis.
+const HEARTBEAT_INTERVAL_MS = 5 * 60_000;
+const HEARTBEAT_TTL_SEC = 15 * 60;
 
 let heartbeatTimer: NodeJS.Timeout | null = null;
 let shuttingDown = false;
 let worker: Worker | null = null;
 
 const QUEUE_NAME = 'events';
-const WORKER_CONCURRENCY = 5;
+// Pre-launch tuning (2026-05-07): dropped 5 → 1 to cut Upstash idle
+// polling cost. BullMQ blocking-pull with 5 concurrent workers burned
+// ~86K Redis cmds/day even with zero traffic. Bump back up when real
+// volume justifies it.
+const WORKER_CONCURRENCY = 1;
 
 /**
  * Dispatch a job to the right handler based on its discriminated-union
@@ -128,6 +134,13 @@ async function main(): Promise<void> {
   worker = new Worker(QUEUE_NAME, dispatchJob, {
     connection,
     concurrency: WORKER_CONCURRENCY,
+    // Pre-launch tuning (2026-05-07): drainDelay 5s → 30s and
+    // stalledInterval 30s → 5min to cut idle Redis polling. The
+    // tradeoff: a job may sit in the queue up to 30s before pickup
+    // (vs ~1s before). Acceptable while pre-launch; revert once we
+    // have paid Redis or real traffic.
+    drainDelay: 30,
+    stalledInterval: 5 * 60_000,
     // Global ceiling — backstop only. Per-account rate limiting lands
     // in spec 007 inside the sendDM handler (Redis sliding window).
     limiter: {
