@@ -155,6 +155,7 @@ export async function processStoryReplyEvent(event: EventRecord): Promise<Proces
     const send: Send = {
       _id: sendId,
       tenantId: event.tenantId,
+      channel: 'instagram',
       igAccountId: event.igAccountId,
       automationId: automation._id,
       eventId: event._id,

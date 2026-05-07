@@ -162,6 +162,7 @@ export async function processDmEvent(event: EventRecord): Promise<ProcessDmResul
     const send: Send = {
       _id: sendId,
       tenantId: event.tenantId,
+      channel: 'instagram',
       igAccountId: event.igAccountId,
       automationId: automation._id,
       eventId: event._id,

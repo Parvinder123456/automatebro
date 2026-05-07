@@ -59,7 +59,8 @@ export function AutomationForm({
 
     const fd = new FormData(e.currentTarget);
     const template = ((fd.get('template') as string) ?? '').trim();
-    const commentReply = trigger === 'comment' ? ((fd.get('commentReply') as string) ?? '').trim() : '';
+    const commentReply =
+      trigger === 'comment' ? ((fd.get('commentReply') as string) ?? '').trim() : '';
 
     if (trigger === 'comment' && template === '' && commentReply === '') {
       submittingRef.current = false;
@@ -282,7 +283,9 @@ export function AutomationForm({
 
       <div>
         <label htmlFor="template" className="block text-sm font-medium">
-          {trigger === 'comment' ? 'DM template (optional if comment reply is set)' : 'Reply template'}
+          {trigger === 'comment'
+            ? 'DM template (optional if comment reply is set)'
+            : 'Reply template'}
         </label>
         <textarea
           id="template"
@@ -304,7 +307,8 @@ export function AutomationForm({
             Comment reply (optional if DM template is set)
           </label>
           <p className="mt-0.5 text-xs text-gray-600">
-            Public reply posted under the comment. Fill in at least one of DM template or comment reply.
+            Public reply posted under the comment. Fill in at least one of DM template or comment
+            reply.
           </p>
           <textarea
             id="commentReply"

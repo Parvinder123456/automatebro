@@ -23,7 +23,8 @@ export interface ListLeadsOptions {
 
 export interface LeadSummary {
   _id: string;
-  igUserId: string;
+  // Spec 026 — igUserId is now nullable (WA-only leads have no IG identity).
+  igUserId: string | null;
   igUsername: string | null;
   email: string | null;
   phone: string | null;
@@ -35,7 +36,7 @@ export interface LeadSummary {
 function toSummary(r: Lead): LeadSummary {
   return {
     _id: r._id,
-    igUserId: r.igUserId,
+    igUserId: r.igUserId ?? null,
     igUsername: r.igUsername ?? null,
     email: r.email ?? null,
     phone: r.phone ?? null,
@@ -95,7 +96,7 @@ export function leadsToCsv(leads: LeadSummary[]): string {
   for (const l of leads) {
     lines.push(
       [
-        csvEscape(l.igUserId),
+        csvEscape(l.igUserId ?? ''),
         csvEscape(l.igUsername ?? ''),
         csvEscape(l.email ?? ''),
         csvEscape(l.phone ?? ''),

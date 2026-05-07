@@ -144,6 +144,8 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
       const send: Send = {
         _id: sendId,
         tenantId: event.tenantId,
+        // Spec 026 — channel discriminator. IG handlers always set 'instagram'.
+        channel: 'instagram',
         igAccountId: event.igAccountId,
         automationId: automation._id,
         eventId: event._id,
@@ -191,6 +193,7 @@ export async function processCommentEvent(event: EventRecord): Promise<ProcessCo
       const replySend: Send = {
         _id: replySendId,
         tenantId: event.tenantId,
+        channel: 'instagram',
         igAccountId: event.igAccountId,
         automationId: automation._id,
         eventId: event._id,
