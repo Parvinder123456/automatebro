@@ -50,7 +50,13 @@
     "./handlers/privacy/exportTenantData": "./src/handlers/privacy/exportTenantData.ts",
     "./handlers/privacy/requestTenantDeletion": "./src/handlers/privacy/requestTenantDeletion.ts",
     "./handlers/classifyIntent": "./src/handlers/classifyIntent.ts",
-    "./handlers/aiUsage/getAiUsageSummary": "./src/handlers/aiUsage/getAiUsageSummary.ts"
+    "./handlers/aiUsage/getAiUsageSummary": "./src/handlers/aiUsage/getAiUsageSummary.ts",
+    "./adapters/whatsapp": "./src/adapters/whatsapp.ts",
+    "./meta/whatsappWebhookParser": "./src/meta/whatsappWebhookParser.ts",
+    "./whatsapp/rates": "./src/whatsapp/rates.ts",
+    "./whatsapp/serviceWindow": "./src/whatsapp/serviceWindow.ts",
+    "./whatsapp/stopKeywords": "./src/whatsapp/stopKeywords.ts",
+    "./handlers/webhooks/ingestWhatsappWebhook": "./src/handlers/webhooks/ingestWhatsappWebhook.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
