@@ -47,11 +47,26 @@ export const SendCommentReplyJob = z.object({
   message: z.string().min(1),
 });
 
+// Spec 026 — WhatsApp send job. The handler re-checks service window
+// + opt-out + daily cap + rate limit + template approval at runtime,
+// since the queued state may diverge from what processEvent saw.
+export const SendWhatsappJob = z.object({
+  type: z.literal('send-whatsapp'),
+  sendId: z.string().uuid(),
+  whatsappAccountId: z.string().uuid(),
+  /** E.164 recipient phone. */
+  recipientPhone: z.string().min(1),
+  /** Pre-rendered freeform body. Empty string allowed if template is set. */
+  content: z.string(),
+  automationId: z.string().uuid().nullable(),
+});
+
 export const JobData = z.discriminatedUnion('type', [
   ProcessEventJob,
   SendDMJob,
   GenerateAiReplyJob,
   SendCommentReplyJob,
+  SendWhatsappJob,
 ]);
 
 export type JobData = z.infer<typeof JobData>;
@@ -59,6 +74,16 @@ export type ProcessEventJobType = z.infer<typeof ProcessEventJob>;
 export type SendDMJobType = z.infer<typeof SendDMJob>;
 export type GenerateAiReplyJobType = z.infer<typeof GenerateAiReplyJob>;
 export type SendCommentReplyJobType = z.infer<typeof SendCommentReplyJob>;
+export type SendWhatsappJobType = z.infer<typeof SendWhatsappJob>;
+
+// Spec 026 — per-WABA rate limit. Default tier-1 is 1000 conversations
+// per 24h. We track conversations approximately via per-recipient sliding
+// windows (same primitive as IG's 185/hr limiter, different cap and
+// duration).
+export const WHATSAPP_TIER1_LIMIT = {
+  max: 1000,
+  durationMs: 24 * 60 * 60 * 1000,
+} as const;
 
 /**
  * Per-IG-account rate limit (Meta's effective ceiling is ~200 DMs/hour;

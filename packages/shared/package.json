@@ -56,7 +56,13 @@
     "./whatsapp/rates": "./src/whatsapp/rates.ts",
     "./whatsapp/serviceWindow": "./src/whatsapp/serviceWindow.ts",
     "./whatsapp/stopKeywords": "./src/whatsapp/stopKeywords.ts",
-    "./handlers/webhooks/ingestWhatsappWebhook": "./src/handlers/webhooks/ingestWhatsappWebhook.ts"
+    "./whatsapp/rateLimit": "./src/whatsapp/rateLimit.ts",
+    "./handlers/webhooks/ingestWhatsappWebhook": "./src/handlers/webhooks/ingestWhatsappWebhook.ts",
+    "./handlers/whatsappAccounts/connectWhatsapp": "./src/handlers/whatsappAccounts/connectWhatsapp.ts",
+    "./handlers/whatsappAccounts/listWhatsappAccounts": "./src/handlers/whatsappAccounts/listWhatsappAccounts.ts",
+    "./handlers/whatsappAccounts/disconnectWhatsapp": "./src/handlers/whatsappAccounts/disconnectWhatsapp.ts",
+    "./handlers/processWhatsappMessageEvent": "./src/handlers/processWhatsappMessageEvent.ts",
+    "./handlers/sendWhatsapp": "./src/handlers/sendWhatsapp.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -19,6 +19,10 @@ import type {
   TenantUserSchema,
   TriggerSchema,
   UserSchema,
+  WhatsappAccountSchema,
+  WhatsappCostsSchema,
+  WhatsappOptInLogSchema,
+  WhatsappTemplateSchema,
 } from '../db/schema.js';
 
 export type Tenant = z.infer<typeof TenantSchema>;
@@ -34,3 +38,8 @@ export type ResponseRecord = z.infer<typeof ResponseSchema>;
 export type Send = z.infer<typeof SendSchema>;
 export type AiUsage = z.infer<typeof AiUsageSchema>;
 export type Lead = z.infer<typeof LeadSchema>;
+// Spec 026 — WhatsApp foundation
+export type WhatsappAccount = z.infer<typeof WhatsappAccountSchema>;
+export type WhatsappTemplate = z.infer<typeof WhatsappTemplateSchema>;
+export type WhatsappCosts = z.infer<typeof WhatsappCostsSchema>;
+export type WhatsappOptInLog = z.infer<typeof WhatsappOptInLogSchema>;

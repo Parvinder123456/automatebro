@@ -24,6 +24,7 @@ import { generateAiReply } from './jobs/generateAiReply.js';
 import { processEvent } from './jobs/processEvent.js';
 import { sendCommentReply } from './jobs/sendCommentReply.js';
 import { sendDM } from './jobs/sendDM.js';
+import { sendWhatsapp } from './jobs/sendWhatsapp.js';
 
 const HEARTBEAT_KEY = 'worker:heartbeat';
 // Pre-launch tuning (2026-05-07): bumped from 30s → 5min to cut Upstash
@@ -57,6 +58,8 @@ async function dispatchJob(job: Job): Promise<void> {
       return generateAiReply(data, job);
     case 'send-comment-reply':
       return sendCommentReply(data, job);
+    case 'send-whatsapp':
+      return sendWhatsapp(data, job);
   }
 }
 

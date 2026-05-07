@@ -3,6 +3,7 @@ import { captureLead } from '@automatebro/shared/handlers/captureLead';
 import { processCommentEvent } from '@automatebro/shared/handlers/processCommentEvent';
 import { processDmEvent } from '@automatebro/shared/handlers/processDmEvent';
 import { processStoryReplyEvent } from '@automatebro/shared/handlers/processStoryReplyEvent';
+import { processWhatsappMessageEvent } from '@automatebro/shared/handlers/processWhatsappMessageEvent';
 import { logger } from '@automatebro/shared/logger';
 import type { ProcessEventJobType } from '@automatebro/shared/queue/jobTypes';
 import type { EventRecord } from '@automatebro/shared/types/tenant';
@@ -74,6 +75,31 @@ export async function processEvent(data: ProcessEventJobType, job: Job): Promise
       );
       break;
     }
+    case 'whatsappMessage': {
+      // Spec 026 — inbound WhatsApp message. Handler does lead upsert
+      // (with implicit opt-in record), STOP-keyword detection, and
+      // automation matching → enqueue send-whatsapp. Lead capture is
+      // INLINE (unlike IG message which fans out captureLead in
+      // parallel) because the WA lead identity (whatsappPhone) is
+      // disjoint from IG's igUserId.
+      const result = await processWhatsappMessageEvent(event);
+      logger.info(
+        { jobId: job.id, eventId: event._id, ...result },
+        'processWhatsappMessageEvent: completed',
+      );
+      break;
+    }
+    case 'whatsappStatus':
+    case 'whatsappTemplateStatus':
+      // Spec 026 — delivery receipts + template status updates land in
+      // a follow-up spec (handle delivery analytics + template
+      // approval-state propagation). For now, persist the event row
+      // (already done by ingest) and mark processed.
+      logger.info(
+        { jobId: job.id, eventId: event._id, kind: event.kind },
+        `processEvent: ${event.kind} — analytics/state handler in a follow-up spec, marking processed`,
+      );
+      break;
     case 'messageReaction':
     case 'mention':
       logger.info(
