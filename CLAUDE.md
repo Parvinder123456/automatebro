@@ -559,6 +559,49 @@ Any change to a form (new field, new gate, removed field) requires:
 5. **Existing raw-fetch tests** that bypass the form: grep for the API path (e.g. `/api/v1/tenants`) and update request bodies
 6. **Lessons learned** in `CLAUDE.md` if the change pattern is novel
 
+### 15. WhatsApp Send Checklist
+
+WhatsApp is structurally different from Instagram (24-hour service window,
+templates require Meta approval, conversation-based pricing). Adding any
+new WhatsApp send path or modifying an existing one requires ALL of:
+
+1. **Service-window check** — before calling Meta, verify the recipient
+   messaged us within 24h OR we're sending an approved template. The check
+   reads `leads.lastWhatsappInboundAt` for the recipient's phone (per-tenant
+   scoped). Skip the check and you'll get error 131047 from Meta + a failed
+   send + a wasted retry cycle.
+2. **Opt-out check** — if `leads.whatsappOptOutAt` is set, the send is
+   refused with status `'failed'`, reason `'opted_out'`. No exception, even
+   for utility templates. Customer's STOP keyword is sacred.
+3. **Daily conversation cap** — query `whatsappCosts` for the current month
+   and the recipient's WABA. If `dailyConversationCap` reached for today,
+   refuse with reason `'daily_cap_exceeded'`. Surface in dashboard.
+4. **Template approval status** — if sending a template, query
+   `whatsappTemplates` and verify `status === 'approved'`. Pending /
+   rejected templates can't be sent. Cache approved status per (tenantId,
+   templateName, language) for ~5 min to avoid hot-path DB reads.
+5. **Conversation-cost increment** — on successful template send, increment
+   `whatsappCosts.conversationsByCategory[<category>]` by 1, but ONLY if
+   this is the first template within a 24h window for that recipient (use
+   `leads.lastTemplateConversationAt` to dedupe). Multiple templates in the
+   same 24h window count as ONE conversation per Meta's billing.
+6. **Sends row** — record the attempt in `sends` with `channel='whatsapp'`,
+   `kind='whatsappFreeform' | 'whatsappTemplate'`, status flowing
+   `queued → sent | failed | rateLimited | outsideWindow | optedOut`.
+7. **Per-WABA rate limit** — Redis sliding-window keyed on `phoneNumberId`,
+   default 1000 conversations/24h (Meta tier-1 default), configurable per
+   account. Same primitive as IG's 185/hr limiter, different cap.
+8. **Encrypted token decryption** — read `whatsappAccounts.encryptedToken`,
+   decrypt with AAD = `phoneNumberId` (per spec 003 row-swap defense). Same
+   `META_TOKEN_KEY` env var as IG.
+9. **Tests** — integration test that fakes the send, asserts cost increment,
+   asserts status transitions, asserts cross-tenant isolation (tenant B's
+   send doesn't show on tenant A's `sends` query).
+
+Skipping any of these results in either compliance violations (opt-out,
+template status), cost runaway (cap, conversation dedup), or silent send
+failures (window, rate limit). They are not optional.
+
 ---
 
 ## Featured Packages
@@ -1017,6 +1060,23 @@ marketers, and small agencies managing 1–10 client IG accounts.
 8. **Encryption at rest for tokens.** Long-lived Page Access Tokens are encrypted with
    AES-256-GCM using a key from the secrets manager before insert. Decrypted only at
    the moment of an outbound API call.
+9. **WhatsApp 24-hour service window is enforced in code.** Per spec 026, every
+   outbound WhatsApp send checks `leads.lastWhatsappInboundAt` before calling Meta.
+   Out-of-window sends without a template are refused locally with status
+   `'outsideWindow'` — never trust Meta to reject. Critical Rule #15 lists the full
+   send checklist.
+10. **WhatsApp opt-in is provable, opt-out is sacred.** Every WA contact has an
+    immutable `whatsappOptInLog` row capturing source + timestamp + evidence.
+    Customer's STOP keyword sets `whatsappOptOutAt` and BLOCKS all future template
+    sends, no exception. Tenants cannot manually clear opt-out — only the customer
+    re-engaging can.
+11. **WhatsApp is per-tenant, never platform-shared.** Each tenant connects their
+    own WABA via Embedded Signup (or v1 manual paste). We never resell, share, or
+    pool WhatsApp numbers across tenants. Risk isolation: one bad tenant's WABA
+    suspension doesn't cascade.
+12. **WhatsApp template approval is async — UX must reflect reality.** Templates
+    submitted to Meta take 24-72h. UI must show pending status, send email on
+    approval/rejection, and DISABLE pending templates in automation form selectors.
 
 ## Tech stack (locked — fits the cc-mastery starter kit)
 
@@ -1062,8 +1122,12 @@ kit rules (`scripts/db-query.ts` and adapter layer).
 - `responses` — the DM/comment-reply content sent when triggered
 - `events` — every webhook event we receive (immutable log, **unique index on `metaEventId`**)
 - `sends` — every outbound DM/comment-reply attempt (queued, sent, failed, rate-limited)
-- `leads` — contacts captured inside DM flows (with email/phone if collected)
+- `leads` — contacts captured inside DM flows (with email/phone if collected; spec 026 adds `whatsappPhone`, `whatsappOptInAt`, `whatsappOptOutAt`, `whatsappAccountId`, `lastWhatsappInboundAt`, `lastTemplateConversationAt` columns)
 - `subscriptions` — Razorpay/Stripe subscription state per tenant
+- `whatsappAccounts` — connected WhatsApp Business Accounts per tenant (spec 026); phone number ID, WABA ID, encrypted system-user token, status
+- `whatsappTemplates` — template definitions + Meta approval status (spec 026); `draft → pending → approved | rejected | paused`
+- `whatsappCosts` — per-tenant per-month conversation aggregator by category (spec 026); mirror of `aiUsage`
+- `whatsappOptInLog` — immutable audit log of opt-in / opt-out events (spec 026)
 
 Every collection EXCEPT `tenants` and `users` has a required indexed `tenantId` field.
 
@@ -1157,6 +1221,11 @@ These augment — but never contradict — the rules in the cc-mastery section a
 5. **No silent dependencies.** If you need a new package (especially anything that touches
    IG, OAuth, queues, or webhooks), propose it with one sentence on why and what you
    considered instead.
+6. **WhatsApp work is gated on spec 026 review.** Any session asked to "build WhatsApp
+   features" must read `docs/specs/026-whatsapp-foundation.md` first, confirm the
+   open questions in §9 are resolved with the user, and follow Critical Rule #15
+   on every send path. The spec deliberately scopes v1 narrowly (no IG→WA bridge,
+   no unified inbox, no drip flows, no media templates) — those are 027+.
 
 ## Lessons learned (append-only; commit each addition)
 
