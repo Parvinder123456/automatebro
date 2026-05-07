@@ -41,5 +41,6 @@ export type Lead = z.infer<typeof LeadSchema>;
 // Spec 026 — WhatsApp foundation
 export type WhatsappAccount = z.infer<typeof WhatsappAccountSchema>;
 export type WhatsappTemplate = z.infer<typeof WhatsappTemplateSchema>;
+export type WhatsappTemplateStatus = WhatsappTemplate['status'];
 export type WhatsappCosts = z.infer<typeof WhatsappCostsSchema>;
 export type WhatsappOptInLog = z.infer<typeof WhatsappOptInLogSchema>;

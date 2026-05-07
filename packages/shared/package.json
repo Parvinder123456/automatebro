@@ -62,7 +62,11 @@
     "./handlers/whatsappAccounts/listWhatsappAccounts": "./src/handlers/whatsappAccounts/listWhatsappAccounts.ts",
     "./handlers/whatsappAccounts/disconnectWhatsapp": "./src/handlers/whatsappAccounts/disconnectWhatsapp.ts",
     "./handlers/processWhatsappMessageEvent": "./src/handlers/processWhatsappMessageEvent.ts",
-    "./handlers/sendWhatsapp": "./src/handlers/sendWhatsapp.ts"
+    "./handlers/sendWhatsapp": "./src/handlers/sendWhatsapp.ts",
+    "./handlers/whatsappTemplates/createWhatsappTemplate": "./src/handlers/whatsappTemplates/createWhatsappTemplate.ts",
+    "./handlers/whatsappTemplates/listWhatsappTemplates": "./src/handlers/whatsappTemplates/listWhatsappTemplates.ts",
+    "./handlers/whatsappTemplates/deleteWhatsappTemplate": "./src/handlers/whatsappTemplates/deleteWhatsappTemplate.ts",
+    "./handlers/whatsappTemplates/handleTemplateStatusWebhook": "./src/handlers/whatsappTemplates/handleTemplateStatusWebhook.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

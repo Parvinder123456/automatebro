@@ -16,6 +16,9 @@ interface NavLink {
 const LINKS: NavLink[] = [
   { href: '/app/dashboard', label: 'Dashboard' },
   { href: '/app/automations', label: 'Automations' },
+  // Spec 026 — WhatsApp top-level nav. Placement after Automations
+  // because WA flows are conceptually a kind of automation.
+  { href: '/app/whatsapp', label: 'WhatsApp' },
   { href: '/app/leads', label: 'Leads' },
   { href: '/app/sends', label: 'Sends' },
   { href: '/app/integrations', label: 'Integrations' },

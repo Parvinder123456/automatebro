@@ -4,6 +4,7 @@ import { processCommentEvent } from '@automatebro/shared/handlers/processComment
 import { processDmEvent } from '@automatebro/shared/handlers/processDmEvent';
 import { processStoryReplyEvent } from '@automatebro/shared/handlers/processStoryReplyEvent';
 import { processWhatsappMessageEvent } from '@automatebro/shared/handlers/processWhatsappMessageEvent';
+import { handleWhatsappTemplateStatusEvent } from '@automatebro/shared/handlers/whatsappTemplates/handleTemplateStatusWebhook';
 import { logger } from '@automatebro/shared/logger';
 import type { ProcessEventJobType } from '@automatebro/shared/queue/jobTypes';
 import type { EventRecord } from '@automatebro/shared/types/tenant';
@@ -89,15 +90,21 @@ export async function processEvent(data: ProcessEventJobType, job: Job): Promise
       );
       break;
     }
+    case 'whatsappTemplateStatus': {
+      const result = await handleWhatsappTemplateStatusEvent(event);
+      logger.info(
+        { jobId: job.id, eventId: event._id, ...result },
+        'handleWhatsappTemplateStatusEvent: completed',
+      );
+      break;
+    }
     case 'whatsappStatus':
-    case 'whatsappTemplateStatus':
-      // Spec 026 — delivery receipts + template status updates land in
-      // a follow-up spec (handle delivery analytics + template
-      // approval-state propagation). For now, persist the event row
-      // (already done by ingest) and mark processed.
+      // Spec 026 — delivery receipts (sent / delivered / read / failed).
+      // For v1 we persist the event row (done by ingest) and mark
+      // processed. Analytics on delivery rates lands in a follow-up.
       logger.info(
         { jobId: job.id, eventId: event._id, kind: event.kind },
-        `processEvent: ${event.kind} — analytics/state handler in a follow-up spec, marking processed`,
+        'processEvent: whatsappStatus — analytics handler in a follow-up spec',
       );
       break;
     case 'messageReaction':
