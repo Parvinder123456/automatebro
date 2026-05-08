@@ -13,27 +13,58 @@ import { getDb } from '../../db/client.js';
 import { IntentSchema } from '../../db/schema.js';
 import type { Automation, ResponseRecord, Trigger } from '../../types/tenant.js';
 
-export const CreateAutomationInput = z.object({
-  igAccountId: z.string().uuid(),
-  name: z.string().trim().min(1).max(120),
-  // Spec 015 — `dm` added so an automation can fire on inbound DMs.
-  trigger: z.enum(['comment', 'dm', 'storyReply', 'mention']).default('comment'),
-  status: z.enum(['active', 'paused', 'archived']).default('active'),
-  keywords: z.array(z.string().trim().min(1)).max(50),
-  matchMode: z.enum(['contains', 'exact', 'startsWith']).default('contains'),
-  postIds: z.array(z.string().min(1)).max(500).optional(),
-  // Spec 016 — optional intent gate. When non-empty, the trigger only
-  // fires if the AI-classified event intent matches one of these.
-  intents: z.array(IntentSchema).max(4).nullable().optional(),
-  response: z.object({
-    mode: z.enum(['static', 'ai']).default('static'),
-    template: z.string().min(1).max(2000).nullable().optional(),
-    aiPrompt: z.string().max(2000).nullable().optional(),
-    aiTone: z.enum(['friendly', 'professional', 'playful']).nullable().optional(),
-    fallbackTemplate: z.string().max(2000).nullable().optional(),
-    commentReply: z.string().max(2000).nullable().optional(),
-  }),
-});
+export const CreateAutomationInput = z
+  .object({
+    // Spec 026 — exactly one of igAccountId / whatsappAccountId. The
+    // `.refine()` below enforces it. Pre-026 callers that send
+    // igAccountId still work unchanged.
+    igAccountId: z.string().uuid().optional(),
+    whatsappAccountId: z.string().uuid().optional(),
+    name: z.string().trim().min(1).max(120),
+    // Spec 015 — `dm` added so an automation can fire on inbound DMs.
+    // Spec 026 — `whatsappMessage` added.
+    trigger: z
+      .enum(['comment', 'dm', 'storyReply', 'mention', 'whatsappMessage'])
+      .default('comment'),
+    status: z.enum(['active', 'paused', 'archived']).default('active'),
+    keywords: z.array(z.string().trim().min(1)).max(50),
+    matchMode: z.enum(['contains', 'exact', 'startsWith']).default('contains'),
+    postIds: z.array(z.string().min(1)).max(500).optional(),
+    // Spec 016 — optional intent gate. When non-empty, the trigger only
+    // fires if the AI-classified event intent matches one of these.
+    intents: z.array(IntentSchema).max(4).nullable().optional(),
+    response: z.object({
+      mode: z.enum(['static', 'ai']).default('static'),
+      template: z.string().min(1).max(2000).nullable().optional(),
+      aiPrompt: z.string().max(2000).nullable().optional(),
+      aiTone: z.enum(['friendly', 'professional', 'playful']).nullable().optional(),
+      fallbackTemplate: z.string().max(2000).nullable().optional(),
+      commentReply: z.string().max(2000).nullable().optional(),
+      // Spec 026 — for WhatsApp automations, optionally specify an
+      // approved template to use for out-of-window sends.
+      whatsappTemplateId: z.string().uuid().nullable().optional(),
+    }),
+  })
+  .refine(
+    (v) =>
+      (v.igAccountId !== undefined && v.whatsappAccountId === undefined) ||
+      (v.igAccountId === undefined && v.whatsappAccountId !== undefined),
+    {
+      message: 'Exactly one of igAccountId or whatsappAccountId is required',
+      path: ['igAccountId'],
+    },
+  )
+  .refine(
+    (v) =>
+      // WhatsApp automations must have trigger='whatsappMessage';
+      // IG automations must have one of the IG triggers.
+      (v.whatsappAccountId === undefined && v.trigger !== 'whatsappMessage') ||
+      (v.whatsappAccountId !== undefined && v.trigger === 'whatsappMessage'),
+    {
+      message: 'whatsappMessage trigger requires whatsappAccountId (and vice versa)',
+      path: ['trigger'],
+    },
+  );
 export type CreateAutomationInputType = z.infer<typeof CreateAutomationInput>;
 
 export interface CreateAutomationResult {
@@ -49,13 +80,55 @@ export async function createAutomation(
   requireTenant(ctx);
   const db = await getDb();
 
-  // Verify igAccountId belongs to this tenant.
-  const igAcct = await db.queryOne<{ _id: string }>('igAccounts', {
-    _id: input.igAccountId,
-    tenantId: ctx.tenantId,
-  } as never);
-  if (igAcct === null) {
-    throw new Error('igAccountId does not belong to this tenant');
+  // Verify the chosen account belongs to this tenant.
+  if (input.igAccountId !== undefined) {
+    const igAcct = await db.queryOne<{ _id: string }>('igAccounts', {
+      _id: input.igAccountId,
+      tenantId: ctx.tenantId,
+    } as never);
+    if (igAcct === null) {
+      throw new Error('igAccountId does not belong to this tenant');
+    }
+  } else if (input.whatsappAccountId !== undefined) {
+    const waAcct = await db.queryOne<{ _id: string; disconnectedAt: Date | null }>(
+      'whatsappAccounts',
+      {
+        _id: input.whatsappAccountId,
+        tenantId: ctx.tenantId,
+      } as never,
+    );
+    if (waAcct === null) {
+      throw new Error('whatsappAccountId does not belong to this tenant');
+    }
+    if (waAcct.disconnectedAt !== null) {
+      throw new Error('whatsappAccountId references a disconnected account');
+    }
+
+    // If a whatsappTemplateId is provided, verify it belongs to the same
+    // account + tenant and is approved.
+    if (
+      input.response.whatsappTemplateId !== null &&
+      input.response.whatsappTemplateId !== undefined
+    ) {
+      const tpl = await db.queryOne<{ _id: string; status: string; whatsappAccountId: string }>(
+        'whatsappTemplates',
+        {
+          _id: input.response.whatsappTemplateId,
+          tenantId: ctx.tenantId,
+        } as never,
+      );
+      if (tpl === null) {
+        throw new Error('whatsappTemplateId not found for this tenant');
+      }
+      if (tpl.whatsappAccountId !== input.whatsappAccountId) {
+        throw new Error('whatsappTemplateId belongs to a different WhatsApp account');
+      }
+      if (tpl.status !== 'approved') {
+        throw new Error(
+          `whatsappTemplateId is not approved (status=${tpl.status}); only approved templates can be referenced`,
+        );
+      }
+    }
   }
 
   const automationId = randomUUID();
@@ -66,7 +139,8 @@ export async function createAutomation(
   const automation: Automation = {
     _id: automationId,
     tenantId: ctx.tenantId,
-    igAccountId: input.igAccountId,
+    igAccountId: input.igAccountId ?? null,
+    whatsappAccountId: input.whatsappAccountId ?? null,
     name: input.name,
     trigger: input.trigger,
     status: input.status,
@@ -92,6 +166,7 @@ export async function createAutomation(
     aiTone: input.response.aiTone ?? null,
     fallbackTemplate: input.response.fallbackTemplate ?? null,
     commentReply: input.response.commentReply ?? null,
+    whatsappTemplateId: input.response.whatsappTemplateId ?? null,
   };
 
   await db.withTransaction(async (tx) => {
